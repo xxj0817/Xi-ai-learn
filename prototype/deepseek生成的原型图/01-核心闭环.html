@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鱼皮 AI 闯关学习小程序 · 01 核心闭环</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ===========================================================
+   01 核心闭环 · A 漫格（骨架）+ B 草稿本（纸底 / 红笔）
+   =========================================================== */
+:root{
+  --board:#EDE8DE;
+  --ink-board:#1A1820;
+  --muted:#6B6675;
+  --hair:rgba(26,24,32,.13);
+  --card:#FCFAF5;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--board);color:var(--ink-board);
+  font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1440px;margin:0 auto;padding:0 clamp(16px,4vw,56px)}
+
+/* ---------- 页头 ---------- */
+.head{padding:clamp(38px,5.4vw,72px) 0 26px;border-bottom:1px solid var(--hair)}
+.kicker{
+  display:inline-block;font-size:12px;letter-spacing:.22em;color:var(--muted);
+  border:1px solid var(--hair);border-radius:999px;padding:5px 14px;margin:0 0 16px;
+  background:rgba(255,255,255,.55);
+}
+.head h1{
+  font-family:"ZCOOL KuaiLe","Noto Sans SC",sans-serif;
+  font-size:clamp(28px,4.2vw,50px);line-height:1.16;margin:0 0 12px;
+}
+.head .sub{margin:0;max-width:64ch;font-size:clamp(14px,1.4vw,16.5px);color:#4C4757}
+.head .sub b{color:var(--ink-board)}
+.pills{display:flex;flex-wrap:wrap;gap:9px;list-style:none;padding:0;margin:22px 0 0}
+.pills li{
+  font-size:12.5px;color:#443F4F;background:#fff;border:1px solid var(--hair);
+  border-radius:8px;padding:6px 12px;
+}
+.pills b{font-weight:700}
+
+/* ---------- 设计系统条 ---------- */
+.system{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;
+  align-items:start;padding:26px 0 8px;
+}
+.sys-card{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:16px 18px}
+.sys-card h3{
+  margin:0 0 12px;font-size:11.5px;letter-spacing:.18em;color:var(--muted);font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+.sys-card h3::after{content:"";flex:1;height:1px;background:var(--hair)}
+.sw{display:flex;flex-wrap:wrap;gap:8px}
+.sw div{flex:1 1 56px}
+.sw i{display:block;height:34px;border-radius:8px;border:1px solid rgba(0,0,0,.14)}
+.sw b{display:block;font-size:11px;margin-top:5px;font-weight:600}
+.sw code{font-size:9.5px;color:var(--muted);font-family:ui-monospace,Consolas,monospace}
+.rules{list-style:none;margin:0;padding:0;font-size:12.5px;color:#464152}
+.rules li{padding-left:14px;position:relative;margin-bottom:5px}
+.rules li::before{content:"—";position:absolute;left:0;color:#A8A2B4}
+.type-row{border-bottom:1px dashed var(--hair);padding:6px 0}
+.type-row:last-child{border-bottom:0}
+.type-row small{display:block;font-size:10px;letter-spacing:.12em;color:var(--muted)}
+
+/* ---------- 区块 ---------- */
+section{padding:calc(clamp(26px,3vw,44px)) 0 0}
+.sec-head{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin:0 0 20px}
+.sec-head h2{
+  font-family:"ZCOOL KuaiLe","Noto Sans SC",sans-serif;font-size:clamp(20px,2.3vw,27px);margin:0;
+}
+.sec-head p{margin:0;color:var(--muted);font-size:13px}
+
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2.2vw,32px);max-width:1240px;margin:0 auto}
+@media (max-width:1180px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.col{min-width:0}
+.cap{display:flex;align-items:baseline;gap:8px;margin:0 0 9px;padding-left:2px}
+.cap .no{
+  flex:0 0 auto;font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:12px;
+  background:var(--ink-board);color:#FFFCF0;border-radius:5px;padding:1px 6px;line-height:1.5;
+}
+.cap b{font-size:12.5px;font-weight:600}
+.cap em{font-style:normal;font-size:11px;color:var(--muted)}
+
+/* ===========================================================
+   手机外壳
+   =========================================================== */
+.phone{
+  position:relative;width:100%;aspect-ratio:9/17.4;
+  border-radius:30px;overflow:hidden;container-type:inline-size;
+  background:#FBF4E1;
+  border:3px solid #17151A;
+  box-shadow:7px 7px 0 #17151A;
+}
+.scr{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  font-size:3.95cqw;line-height:1.46;color:#17151A;
+  background-color:#FBF4E1;
+  background-image:radial-gradient(rgba(23,21,26,.10) 0.9px, transparent 1px);
+  background-size:3.4cqw 3.4cqw;
+}
+.statusbar{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:2.4cqw 24cqw 0.4cqw 3.4cqw;font-size:2.9cqw;font-weight:700;position:relative;z-index:5;
+}
+.statusbar .icons{display:flex;align-items:center;gap:1.4cqw}
+.sig{display:flex;align-items:flex-end;gap:.35cqw}
+.sig i{width:.8cqw;background:currentColor;border-radius:.3cqw;display:block}
+.sig i:nth-child(1){height:1.2cqw}.sig i:nth-child(2){height:1.9cqw}
+.sig i:nth-child(3){height:2.6cqw}.sig i:nth-child(4){height:3.3cqw}
+.bat{width:5.6cqw;height:2.9cqw;border:1px solid currentColor;border-radius:.7cqw;padding:.35cqw}
+.bat i{display:block;height:100%;width:74%;background:currentColor;border-radius:.3cqw}
+
+.capsule{
+  position:absolute;top:3.1cqw;right:2.6cqw;z-index:9;
+  display:flex;align-items:center;justify-content:space-around;
+  width:20cqw;height:6.6cqw;border-radius:999px;
+  border:1px solid rgba(23,21,26,.28);background:rgba(255,252,240,.92);
+}
+.capsule span{font-size:3.1cqw;line-height:1;color:#17151A}
+.capsule .ring{width:3.1cqw;height:3.1cqw;border-radius:50%;border:1.3px solid #17151A}
+
+.body{flex:1 1 auto;overflow:hidden;display:flex;flex-direction:column;position:relative;z-index:2}
+.body>*{flex-shrink:0}
+.pad{padding:0 4.6cqw}
+.sp{flex:1 1 auto !important;min-height:0}
+
+.tabbar{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-around;
+  padding:2.2cqw 0 3.2cqw;position:relative;z-index:4;
+}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:.7cqw;font-size:2.5cqw;opacity:.42}
+.tabbar div.on{opacity:1;font-weight:700}
+.tabbar svg{width:5.6cqw;height:5.6cqw;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ===========================================================
+   基础组件
+   =========================================================== */
+.hand{font-family:"KaiTi","STKaiti","Kaiti SC",serif}
+
+.logo{display:inline-flex;align-items:center;gap:1.6cqw;font-family:"ZCOOL KuaiLe",sans-serif;font-size:5cqw;line-height:1}
+.logo .stamp{
+  display:inline-flex;align-items:center;justify-content:center;width:8.4cqw;height:8.4cqw;
+  border:2.5px solid #17151A;border-radius:2cqw;background:#FFC93C;transform:rotate(-6deg);
+  font-size:4.3cqw;font-family:"ZCOOL QingKe HuangYou",sans-serif;box-shadow:2px 2px 0 #17151A;
+}
+
+.panel{
+  position:relative;border:2.5px solid #17151A;border-radius:2.4cqw;background:#FFFCF0;
+  box-shadow:2.2cqw 2.2cqw 0 #17151A;
+}
+.panel .corner{
+  position:absolute;top:-2.4cqw;left:3cqw;background:#17151A;color:#FFC93C;
+  font-size:2.5cqw;letter-spacing:.08em;padding:.5cqw 1.6cqw;border-radius:.9cqw;
+}
+
+.chip{
+  display:inline-flex;align-items:center;gap:1.1cqw;font-size:2.9cqw;
+  border:2px solid #17151A;border-radius:999px;padding:1.2cqw 2.4cqw;background:#fff;
+  box-shadow:1.2cqw 1.2cqw 0 rgba(23,21,26,.9);
+}
+.chip.y{background:#FFC93C}
+.chip.b{background:#D9E6FF}
+.chip.g{background:#DFF3E6}
+.chip.plain{box-shadow:none;border-width:1.6px;background:transparent}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:1.6cqw;width:100%;
+  padding:4.3cqw;border:2.5px solid #17151A;border-radius:2.4cqw;
+  background:#FFC93C;color:#17151A;font-family:"ZCOOL KuaiLe",sans-serif;
+  font-size:4.8cqw;letter-spacing:.04em;box-shadow:2.4cqw 2.4cqw 0 #17151A;
+}
+.btn.blue{background:#2F6BE4;color:#fff}
+.btn.ghost{background:#FFFCF0;box-shadow:1.4cqw 1.4cqw 0 #17151A;font-size:4.2cqw;padding:3.2cqw}
+.btn.mini{padding:2.8cqw;font-size:4cqw;box-shadow:1.8cqw 1.8cqw 0 #17151A}
+
+.meta{display:flex;align-items:center;justify-content:space-between;font-size:2.7cqw;color:#5C5665}
+.meta b{color:#17151A}
+
+.hl{background:linear-gradient(transparent 56%,#FFE873 56%);padding:0 .3cqw}
+.uline{color:#E4443A;font-family:"KaiTi",serif}
+
+.tagrow{display:flex;gap:1.3cqw;flex-wrap:wrap}
+.tagrow span{font-size:2.5cqw;border:1.6px solid #17151A;border-radius:999px;padding:.4cqw 1.7cqw;background:#fff}
+
+/* 进度格 */
+.cells{display:flex;gap:1.3cqw;align-items:center}
+.cells i{
+  width:6cqw;height:6cqw;border:2px solid #17151A;border-radius:.7cqw;background:#FFFCF0;
+  display:block;position:relative;
+}
+.cells i.done{background:#17151A}
+.cells i.ok{background:#2FA96B}
+.cells i.bad{background:#E4443A}
+.cells i.now{background:#FFC93C;transform:scale(1.12)}
+.cells i.now::after{content:"";position:absolute;inset:-1.3cqw;border:1px solid rgba(23,21,26,.45);border-radius:1.1cqw}
+
+/* ===========================================================
+   屏幕 01 首页
+   =========================================================== */
+.hero-title{font-family:"ZCOOL KuaiLe",sans-serif;font-size:10cqw;line-height:1.1;margin:0}
+.hero-title em{font-style:normal;color:#E4443A}
+
+.inputbox{padding:3.2cqw 3.2cqw 2.6cqw;min-height:17cqw;display:flex;flex-direction:column;justify-content:space-between}
+.inputbox .txt{font-family:"ZCOOL KuaiLe",sans-serif;font-size:4cqw;line-height:1.5}
+.inputbox .ph{color:#A29B8C}
+.caret{display:inline-block;width:2px;height:4.2cqw;background:#17151A;vertical-align:-.6cqw;animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.inputbox .row{display:flex;align-items:center;justify-content:space-between;margin-top:2.2cqw}
+.tools{display:flex;gap:1.4cqw}
+.tool{
+  width:7.6cqw;height:7.6cqw;border-radius:2cqw;border:2px solid #17151A;
+  display:flex;align-items:center;justify-content:center;background:#fff;
+}
+.tool svg{width:4cqw;height:4cqw;fill:none;stroke:#17151A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.count{font-size:2.5cqw;color:#8A8494}
+
+.task-row{display:flex;align-items:center;gap:2.2cqw;font-size:3.1cqw}
+.task-row .box{
+  flex:0 0 auto;width:5.4cqw;height:5.4cqw;border:2px solid #17151A;border-radius:.9cqw;
+  display:flex;align-items:center;justify-content:center;font-size:2.4cqw;background:#fff;
+}
+.task-row .box.done{background:#2FA96B;color:#fff}
+.task-row .right{margin-left:auto;font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:2.9cqw}
+
+.strip{
+  display:flex;align-items:center;gap:2cqw;font-size:2.8cqw;color:#5C5665;
+  border-top:2px dashed rgba(23,21,26,.3);padding-top:3cqw;
+}
+.strip b{
+  margin-left:auto;background:#17151A;color:#FFFCF0;padding:.35cqw 1.5cqw;
+  border-radius:.7cqw;font-size:2.4cqw;font-weight:500;
+}
+
+/* 分段选择 */
+.seg{display:flex;border:2px solid #17151A;border-radius:1.4cqw;overflow:hidden;background:#fff}
+.seg span{
+  flex:1;text-align:center;padding:1.6cqw 0;font-size:2.8cqw;border-right:2px solid #17151A;
+}
+.seg span:last-child{border-right:0}
+.seg span.on{background:#FFC93C;font-weight:700}
+
+/* ===========================================================
+   生成中 / 失败
+   =========================================================== */
+.step{display:flex;gap:2.6cqw;align-items:flex-start;position:relative}
+.step .dot{
+  flex:0 0 auto;width:6.4cqw;height:6.4cqw;border:2px solid #17151A;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:2.8cqw;background:#FFFCF0;
+}
+.step .dot.done{background:#2FA96B;color:#fff;border-color:#17151A}
+.step .dot.run{background:#FFC93C}
+.step .dot.run::after{
+  content:"";width:2.4cqw;height:2.4cqw;border:1.6px solid #17151A;border-top-color:transparent;
+  border-radius:50%;animation:spin .9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.step .t{font-size:3.2cqw;line-height:1.35}
+.step .s{font-size:2.5cqw;color:#8A8494;margin-top:.3cqw}
+.step .line{position:absolute;left:3.1cqw;top:7cqw;bottom:-1.6cqw;width:1.5px;background:rgba(23,21,26,.22)}
+
+.mini-cells{display:flex;gap:1.6cqw;margin-top:1.6cqw}
+.mini-cells i{
+  flex:1;height:10cqw;border:2px dashed rgba(23,21,26,.45);border-radius:1.4cqw;display:block;
+}
+.mini-cells i.fill{border-style:solid;background:#FFC93C}
+.mini-cells i.half{
+  border-style:solid;background:repeating-linear-gradient(45deg,#FFC93C 0 1.4cqw,#FFFCF0 1.4cqw 2.8cqw);
+}
+
+.burst{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:6.6cqw;line-height:1;
+  background:#E4443A;color:#fff;border:2.5px solid #17151A;border-radius:1.2cqw;
+  padding:1.1cqw 2.2cqw;transform:rotate(-7deg);box-shadow:1.6cqw 1.6cqw 0 #17151A;
+}
+.burst.ok{background:#2FA96B}
+.burst.big{font-size:9cqw;padding:1.6cqw 3cqw}
+
+/* ===========================================================
+   答题
+   =========================================================== */
+.stem{font-family:"ZCOOL KuaiLe",sans-serif;font-size:4.8cqw;line-height:1.4;margin:0}
+.opt{
+  display:flex;gap:2.3cqw;align-items:flex-start;position:relative;
+  border:2.2px solid #17151A;border-radius:1.5cqw 1.5cqw 1.5cqw .5cqw;
+  background:#FFFCF0;padding:3.5cqw 3cqw;
+}
+.opt.has-mark{padding-right:8.4cqw}
+.opt .key{
+  flex:0 0 auto;width:6cqw;height:6cqw;border-radius:50%;border:2px solid #17151A;
+  display:flex;align-items:center;justify-content:center;background:#fff;
+  font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:3.3cqw;
+}
+.opt .key.sq{border-radius:1cqw}
+.opt .txt{font-size:3.6cqw;line-height:1.4}
+.opt.pick{box-shadow:1.7cqw 1.7cqw 0 #2F6BE4;background:#EAF1FF;border-width:2.6px}
+.opt.pick .key{background:#2F6BE4;color:#fff}
+.opt.right{background:#E6F7EC;box-shadow:1.7cqw 1.7cqw 0 #2FA96B}
+.opt.right .key{background:#2FA96B;color:#fff}
+.opt.wrong{background:#FFECE9;box-shadow:1.7cqw 1.7cqw 0 #E4443A}
+.opt.wrong .key{background:#E4443A;color:#fff}
+.opt.dim{opacity:.45}
+.mark{position:absolute;right:1.6cqw;top:.6cqw;font-size:4.2cqw;line-height:1}
+
+.judge{display:flex;gap:2.8cqw}
+.judge > div{
+  flex:1;border:2.5px solid #17151A;border-radius:2.2cqw;background:#FFFCF0;
+  padding:6.2cqw 0;text-align:center;box-shadow:2cqw 2cqw 0 #17151A;
+}
+.judge .ico{font-size:8cqw;line-height:1;font-family:"ZCOOL QingKe HuangYou",sans-serif}
+.judge .lb{font-family:"ZCOOL KuaiLe",sans-serif;font-size:4.2cqw;margin-top:1cqw}
+.judge .no{background:#FFFCF0}
+.judge .yes{background:#DFF3E6}
+.judge .ico{font-size:8cqw;line-height:1;font-family:"ZCOOL QingKe HuangYou",sans-serif}
+.judge .lb{font-family:"ZCOOL KuaiLe",sans-serif;font-size:4.2cqw;margin-top:1cqw}
+.judge .no{background:#fff}
+.judge .yes{background:#DFF3E6}
+
+/* 讲解 */
+.note{
+  position:relative;border:2.2px solid #17151A;border-radius:1.8cqw;background:#FFF9E4;
+  padding:3.2cqw 3.2cqw 3cqw;box-shadow:1.4cqw 1.4cqw 0 rgba(23,21,26,.9);
+}
+.note .who{
+  position:absolute;top:-2.4cqw;left:2.6cqw;background:#17151A;color:#FFC93C;
+  font-size:2.5cqw;padding:.4cqw 1.5cqw;border-radius:.7cqw;letter-spacing:.06em;
+}
+.note p{margin:1.4cqw 0 0;font-size:3.3cqw;line-height:1.62}
+.note .k{font-family:"KaiTi",serif;font-size:3.4cqw}
+
+.remember{
+  display:flex;align-items:center;gap:2cqw;border:2.4px solid #17151A;background:#FFC93C;
+  border-radius:1.5cqw;padding:2.6cqw 2.8cqw;box-shadow:1.5cqw 1.5cqw 0 #17151A;font-size:3.1cqw;
+}
+.remember b{font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:4.2cqw;line-height:1;flex:0 0 auto}
+
+/* ===========================================================
+   结算
+   =========================================================== */
+.seal{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  width:34cqw;height:34cqw;border:3px solid #E4443A;border-radius:50%;color:#E4443A;
+  transform:rotate(-8deg);background:rgba(228,68,58,.05);
+}
+.seal .big{font-family:"ZCOOL KuaiLe",sans-serif;font-size:8.4cqw;line-height:1}
+.seal .small{font-size:2.7cqw;letter-spacing:.2em;margin-top:.6cqw}
+
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:2cqw}
+.score-cell{
+  border:2px solid #17151A;border-radius:1.6cqw;background:#FFFCF0;padding:2.4cqw;text-align:center;
+}
+.score-cell .v{font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:6.4cqw;line-height:1.05}
+.score-cell .l{font-size:2.4cqw;color:#6E6976;margin-top:.4cqw}
+
+/* ===========================================================
+   报告 / 海报
+   =========================================================== */
+.ring{
+  display:flex;align-items:center;justify-content:center;gap:3.4cqw;
+}
+.ring svg{width:30cqw;height:30cqw;transform:rotate(-90deg)}
+.ring .num{font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:9cqw;line-height:1}
+.ring .cap2{font-size:2.6cqw;color:#6E6976;letter-spacing:.1em}
+
+.pts{display:flex;flex-direction:column;gap:1.8cqw}
+.pt{display:flex;gap:2cqw;align-items:flex-start;font-size:3.1cqw;line-height:1.45}
+.pt .b{
+  flex:0 0 auto;width:4.6cqw;height:4.6cqw;border-radius:.9cqw;display:flex;align-items:center;
+  justify-content:center;font-size:2.4cqw;border:1.8px solid #17151A;margin-top:.5cqw;
+}
+.pt .b.g{background:#DFF3E6}
+.pt .b.r{background:#FFE0DB}
+
+.sum-item{display:flex;gap:2.2cqw;align-items:flex-start;font-size:3.2cqw;line-height:1.55}
+.sum-item .n{
+  flex:0 0 auto;width:5.4cqw;height:5.4cqw;border:2px solid #17151A;border-radius:.9cqw;
+  background:#FFC93C;display:flex;align-items:center;justify-content:center;
+  font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:2.9cqw;
+}
+
+/* 海报 */
+.poster{
+  position:relative;border:2.5px solid #17151A;background:#FBF4E1;border-radius:1.6cqw;
+  padding:4cqw 3.6cqw 3.4cqw;box-shadow:2cqw 2cqw 0 #17151A;overflow:hidden;
+}
+.poster::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(23,21,26,.09) 0.8px,transparent 1px);
+  background-size:2.6cqw 2.6cqw;
+}
+.poster .ttl{position:relative;font-family:"ZCOOL KuaiLe",sans-serif;font-size:7.6cqw;line-height:1.16;margin:0}
+.poster .quote{
+  position:relative;font-family:"KaiTi",serif;font-size:4.2cqw;line-height:1.5;margin:2.4cqw 0 0;color:#2C2A22;
+}
+.poster .row2{position:relative;display:flex;align-items:flex-end;gap:3cqw;margin-top:3.4cqw}
+.poster .stat{display:flex;gap:3.4cqw}
+.poster .stat div span{display:block;font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:5.4cqw;line-height:1.1}
+.poster .stat div small{font-size:2.3cqw;color:#7A7468}
+.qr{
+  margin-left:auto;width:13cqw;height:13cqw;border:2px solid #17151A;border-radius:1cqw;background:#fff;
+  background-image:
+    repeating-conic-gradient(#17151A 0 25%, #fff 0 50%);
+  background-size:2.2cqw 2.2cqw;
+  box-shadow:inset 0 0 0 1.6cqw #fff;
+}
+.poster .seal2{
+  position:absolute;right:3cqw;top:3cqw;width:11cqw;height:11cqw;border:2.5px solid #E4443A;
+  border-radius:50%;color:#E4443A;display:flex;align-items:center;justify-content:center;
+  font-family:"ZCOOL KuaiLe",sans-serif;font-size:3.2cqw;transform:rotate(9deg);text-align:center;line-height:1.1;
+}
+.hairline{height:1px;background:rgba(23,21,26,.18);margin:2.6cqw 0}
+
+/* 底部说明 */
+.foot{
+  margin-top:clamp(40px,5vw,70px);padding:34px 0 70px;border-top:1px solid var(--hair);
+  font-size:12.5px;color:var(--muted);
+}
+.foot p{margin:0 0 8px;max-width:88ch}
+.foot b{color:var(--ink-board)}
+.legend{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:6px;
+}
+.legend div{background:var(--card);border:1px solid var(--hair);border-radius:12px;padding:14px 16px;font-size:12.5px;color:#464152}
+.legend div b{display:block;font-size:12px;letter-spacing:.1em;color:var(--ink-board);margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="wrap">
+    <p class="kicker">鱼皮 AI 闯关学习小程序 · 原型 01</p>
+    <h1>核心闭环 · 12 屏</h1>
+    <p class="sub">
+      输入 → 生成 → 闯关 → 即时讲解 → 结算 → 复盘 → 分享，一条完整的故事线。
+      风格按你确认的 <b>A 漫格（骨架）+ B 草稿本（纸底 / 红笔）</b> 混血落地：
+      用 A 的粗描边、硬投影、分镜格位撑起结构，用 B 的纸黄底、便签、荧光笔压住长文本，拟声词作为唯一的状态"音效"。
+    </p>
+    <ul class="pills">
+      <li>画布 <b>9 : 17.4</b> · 模拟微信小程序</li>
+      <li>排列 <b>一行三列</b> · 1180 / 760 断点降级</li>
+      <li><b>静态展示稿</b> · 无跳转逻辑</li>
+      <li>数据取自需求文档：RAG 入门 · 5 题</li>
+    </ul>
+
+    <div class="system">
+      <div class="sys-card">
+        <h3>色板</h3>
+        <div class="sw">
+          <div><i style="background:#FFC93C"></i><b>衰黄</b><code>#FFC93C</code></div>
+          <div><i style="background:#2F6BE4"></i><b>校服蓝</b><code>#2F6BE4</code></div>
+          <div><i style="background:#E4443A"></i><b>红笔</b><code>#E4443A</code></div>
+          <div><i style="background:#2FA96B"></i><b>通过绿</b><code>#2FA96B</code></div>
+          <div><i style="background:#FBF4E1"></i><b>纸黄</b><code>#FBF4E1</code></div>
+          <div><i style="background:#17151A"></i><b>油墨黑</b><code>#17151A</code></div>
+        </div>
+      </div>
+      <div class="sys-card">
+        <h3>字阶</h3>
+        <div class="type-row"><small>大标题 / 站酷快乐体 40</small><div style="font-family:'ZCOOL KuaiLe';font-size:26px;line-height:1.2">万物皆可闯关</div></div>
+        <div class="type-row"><small>题干 / 快乐体 19</small><div style="font-family:'ZCOOL KuaiLe';font-size:17px">RAG 里的 R 在做什么？</div></div>
+        <div class="type-row"><small>正文 / 思源黑 13.5</small><div style="font-size:13.5px;color:#3F3A4C">先检索资料，再交给模型组织答案。</div></div>
+        <div class="type-row"><small>批注 / 楷体 13</small><div class="hand" style="font-size:13px;color:#E4443A">这题容易错，圈一下 →</div></div>
+      </div>
+      <div class="sys-card">
+        <h3>三条硬规则</h3>
+        <ul class="rules">
+          <li>描边 2.5px、硬投影 0 模糊、圆角 10–14px，拒绝"圆滚滚婴儿感"</li>
+          <li>纸黄底 + 6% 网点，是整套质感的来源，不用纯白</li>
+          <li>答对＝拟声词（叮），答错＝红笔（啪），状态色只在这两处出现</li>
+          <li>讲解永远是"旁白框"，和题干物理区分</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== ROW 1 ==================== -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>① 开题：从一句话到一套题</h2><p>输入框是唯一入口，所有"高级能力"折叠成三个小图标</p></div>
+    <div class="grid">
+
+      <!-- 01 首页空态 -->
+      <div class="col">
+        <p class="cap"><span class="no">01</span><b>首页 · 空态</b><em>先给方向，再给入口</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="padding-top:2.4cqw"><div class="logo"><span class="stamp">鱼</span>鱼皮闯关</div></div>
+
+              <div style="margin-top:5.4cqw">
+                <p style="font-size:3.2cqw;color:#6E6976;letter-spacing:.14em;margin:0 0 1.2cqw">第 0 格 · 你想学点啥？</p>
+                <h3 class="hero-title">万物<br>皆可闯关<em>！</em></h3>
+              </div>
+
+              <div class="panel inputbox" style="margin-top:4.6cqw">
+                <span class="corner">输入</span>
+                <div class="txt ph">一句话 / 一段话 / 一个链接<span class="caret"></span></div>
+                <div class="row">
+                  <div class="tools">
+                    <span class="tool"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
+                    <span class="tool"><svg viewBox="0 0 24 24"><path d="M10.2 13.8a4 4 0 0 0 5.6 0l2.6-2.6a4 4 0 0 0-5.6-5.6l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-2.6 2.6a4 4 0 0 0 5.6 5.6l1.2-1.2"/></svg></span>
+                    <span class="tool"><svg viewBox="0 0 24 24"><rect x="9" y="2.6" width="6" height="11" rx="3"/><path d="M5.4 11a6.6 6.6 0 0 0 13.2 0"/><path d="M12 17.6V21"/></svg></span>
+                  </div>
+                  <span class="count">0 / 2000</span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:1.8cqw;flex-wrap:wrap;margin-top:4cqw">
+                <span class="chip">RAG 入门</span>
+                <span class="chip y">二叉树遍历</span>
+                <span class="chip b">光合作用</span>
+              </div>
+
+              <div class="panel" style="margin-top:5cqw;padding:3.4cqw 3cqw 2.8cqw">
+                <span class="corner">今日任务</span>
+                <div style="display:flex;flex-direction:column;gap:2.8cqw;margin-top:2cqw">
+                  <div class="task-row">
+                    <span class="box done">✓</span><span>每日一闯</span><span class="right">+40 XP</span>
+                  </div>
+                  <div class="task-row">
+                    <span class="box"></span><span>复习 2 个易错点</span><span class="right" style="color:#E4443A">进行中</span>
+                  </div>
+                  <div class="task-row">
+                    <span class="box"></span><span>连续闯关 7 天</span><span class="right" style="color:#8A8494">3 / 7</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="strip" style="margin-top:3.4cqw">
+                <div style="display:flex;flex-direction:column;gap:.5cqw;padding-top:.6cqw">
+                  <span class="hand" style="font-size:2.7cqw;color:#8A8494">上次没看完</span>
+                  <span style="font-size:2.9cqw">RAG 与向量检索 · 剩 2 题</span>
+                </div>
+                <b>继续 ›</b>
+              </div>
+
+              <div style="display:flex;gap:2cqw;margin-top:3.4cqw">
+                <div style="flex:1;border:2px solid #17151A;border-radius:1.4cqw;background:#FFFCF0;padding:2cqw;text-align:center">
+                  <div style="font-family:'ZCOOL QingKe HuangYou';font-size:4.6cqw;line-height:1.1">3</div>
+                  <div style="font-size:2.2cqw;color:#6E6976">连胜天数</div>
+                </div>
+                <div style="flex:1;border:2px solid #17151A;border-radius:1.4cqw;background:#FFFCF0;padding:2cqw;text-align:center">
+                  <div style="font-family:'ZCOOL QingKe HuangYou';font-size:4.6cqw;line-height:1.1">12</div>
+                  <div style="font-size:2.2cqw;color:#6E6976">本周题目</div>
+                </div>
+                <div style="flex:1;border:2px solid #17151A;border-radius:1.4cqw;background:#FFFCF0;padding:2cqw;text-align:center">
+                  <div style="font-family:'ZCOOL QingKe HuangYou';font-size:4.6cqw;line-height:1.1">78%</div>
+                  <div style="font-size:2.2cqw;color:#6E6976">正确率</div>
+                </div>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw"><div class="btn">开 闯 <span style="font-family:'Noto Sans SC';font-weight:900">!</span></div></div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 02 输入完成 -->
+      <div class="col">
+        <p class="cap"><span class="no">02</span><b>首页 · 输入完成</b><em>让用户知道接下来会发生什么</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="padding-top:2.4cqw"><div class="logo"><span class="stamp">鱼</span>鱼皮闯关</div></div>
+
+              <p style="font-size:3.2cqw;color:#6E6976;letter-spacing:.14em;margin:5cqw 0 2.6cqw">第 0 格 · 确认一下</p>
+
+              <div class="panel inputbox" style="min-height:22cqw">
+                <span class="corner">你的题目</span>
+                <div class="txt" style="font-size:3.9cqw">什么是 RAG？它和普通搜索、微调分别有什么区别？<span class="caret"></span></div>
+                <div class="row">
+                  <div class="tools">
+                    <span class="tool"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
+                    <span class="tool"><svg viewBox="0 0 24 24"><path d="M10.2 13.8a4 4 0 0 0 5.6 0l2.6-2.6a4 4 0 0 0-5.6-5.6l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-2.6 2.6a4 4 0 0 0 5.6 5.6l1.2-1.2"/></svg></span>
+                    <span class="tool"><svg viewBox="0 0 24 24"><rect x="9" y="2.6" width="6" height="11" rx="3"/><path d="M5.4 11a6.6 6.6 0 0 0 13.2 0"/><path d="M12 17.6V21"/></svg></span>
+                  </div>
+                  <span class="count" style="color:#17151A">34 / 2000</span>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:2cqw;margin-top:3cqw;font-size:2.7cqw;color:#6E6976">
+                <span class="chip g" style="padding:.7cqw 1.8cqw;font-size:2.5cqw;box-shadow:none">已识别</span>
+                <span>学习主题 · 技术概念</span>
+                <span style="margin-left:auto" class="hand">可修改 ↑</span>
+              </div>
+
+              <div class="panel" style="margin-top:4.6cqw;padding:3.4cqw 3cqw">
+                <span class="corner">AI 会这样做</span>
+                <div style="display:flex;flex-direction:column;gap:2.4cqw;margin-top:2cqw;font-size:3cqw;line-height:1.45">
+                  <div style="display:flex;gap:2cqw"><span style="font-family:'ZCOOL QingKe HuangYou';color:#E4443A">1</span><span>先联网补充 3–5 条权威资料</span></div>
+                  <div style="display:flex;gap:2cqw"><span style="font-family:'ZCOOL QingKe HuangYou';color:#E4443A">2</span><span>拆成 5 个知识点，各出一题</span></div>
+                  <div style="display:flex;gap:2cqw"><span style="font-family:'ZCOOL QingKe HuangYou';color:#E4443A">3</span><span>每题配一段人话讲解</span></div>
+                </div>
+              </div>
+
+              <div style="margin-top:4.4cqw">
+                <div class="seg">
+                  <span>简单</span><span class="on">混合</span><span>困难</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:1.6cqw;flex-wrap:wrap;margin-top:3.6cqw">
+                <span class="chip plain" style="font-size:2.5cqw;padding:.5cqw 1.6cqw">共 5 题</span>
+                <span class="chip plain" style="font-size:2.5cqw;padding:.5cqw 1.6cqw">3 单选</span>
+                <span class="chip plain" style="font-size:2.5cqw;padding:.5cqw 1.6cqw">1 多选</span>
+                <span class="chip plain" style="font-size:2.5cqw;padding:.5cqw 1.6cqw">1 判断</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw">
+                <div class="btn blue">开始生成 →</div>
+                <p style="text-align:center;font-size:2.5cqw;color:#8A8494;margin:1.8cqw 0 0">约 20 秒 · 消耗 1 次额度</p>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 生成中 -->
+      <div class="col">
+        <p class="cap"><span class="no">03</span><b>AI 生成中</b><em>把等待做成"正在画格子"</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4cqw">
+                <span class="hand" style="font-size:3cqw;color:#6E6976">第 0 格 · 作画中</span>
+                <span class="chip plain" style="font-size:2.6cqw">取消</span>
+              </div>
+
+              <h3 class="hero-title" style="font-size:7.4cqw;margin-top:3.6cqw">正在把资料<br>画成 5 个关卡<span style="color:#E4443A">…</span></h3>
+
+              <div class="panel" style="margin-top:4.6cqw;padding:3.6cqw 3.2cqw">
+                <span class="corner">生成进度</span>
+                <div style="display:flex;flex-direction:column;gap:3cqw;margin-top:2.2cqw">
+                  <div class="step">
+                    <span class="dot done">✓</span>
+                    <div><div class="t">联网检索资料</div><div class="s">命中 6 篇 · 已清洗</div></div>
+                    <span class="line"></span>
+                  </div>
+                  <div class="step">
+                    <span class="dot run"></span>
+                    <div><div class="t">拆解知识点</div><div class="s">正在识别核心概念与易错点…</div></div>
+                    <span class="line"></span>
+                  </div>
+                  <div class="step">
+                    <span class="dot"></span>
+                    <div><div class="t">出题 &amp; 写讲解</div><div class="s">等待中</div></div>
+                  </div>
+                </div>
+
+                <div style="margin-top:3.4cqw">
+                  <div style="display:flex;justify-content:space-between;font-size:2.6cqw;color:#6E6976;margin-bottom:1.4cqw">
+                    <span>已完成 1 / 3</span><span class="hand">预计还需 12 秒</span>
+                  </div>
+                  <div style="height:2.8cqw;border:2px solid #17151A;border-radius:999px;background:#fff;overflow:hidden">
+                    <div style="width:38%;height:100%;background:#FFC93C"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mini-cells">
+                <i class="fill"></i><i class="half"></i><i></i><i></i><i></i>
+              </div>
+              <p style="font-size:2.6cqw;color:#8A8494;text-align:center;margin:1.6cqw 0 0">格子在画满的时候，题目就好了</p>
+
+              <div class="panel" style="margin-top:4.2cqw;padding:3cqw 3cqw 2.6cqw">
+                <span class="corner">已经画好 2 格</span>
+                <div style="display:flex;flex-direction:column;gap:2.2cqw;margin-top:2.2cqw">
+                  <div style="display:flex;align-items:center;gap:2cqw;border:1.6px dashed rgba(23,21,26,.45);border-radius:1.2cqw;padding:2cqw 2.2cqw">
+                    <span style="font-family:'ZCOOL QingKe HuangYou';font-size:3.2cqw;color:#E4443A">Q1</span>
+                    <span style="font-size:2.9cqw;color:#4A4453">RAG 里 R 在做什么</span>
+                    <span style="margin-left:auto;font-size:2.3cqw;color:#2FA96B">✓ 已生成</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:2cqw;border:1.6px dashed rgba(23,21,26,.45);border-radius:1.2cqw;padding:2cqw 2.2cqw">
+                    <span style="font-family:'ZCOOL QingKe HuangYou';font-size:3.2cqw;color:#E4443A">Q2</span>
+                    <span style="font-size:2.9cqw;color:#4A4453">RAG 与微调的边界</span>
+                    <span style="margin-left:auto;font-size:2.3cqw;color:#2FA96B">✓ 已生成</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sp"></div>
+              <div class="note" style="margin-bottom:2.4cqw">
+                <span class="who">小提示</span>
+                <p class="k">这时可以锁屏，出题完成会推一条微信订阅消息给你。</p>
+              </div>
+              <div class="btn ghost" style="margin-bottom:3.6cqw;box-shadow:1.2cqw 1.2cqw 0 #17151A">取消生成</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ==================== ROW 2 ==================== -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>② 失败兜底 &amp; 三种题型</h2><p>错误态必须给"退一步"的选项；题型差异要一眼可辨</p></div>
+    <div class="grid">
+
+      <!-- 04 生成失败 -->
+      <div class="col">
+        <p class="cap"><span class="no">04</span><b>生成失败 · 重试</b><em>不甩锅，给出降级方案</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4cqw">
+                <span class="hand" style="font-size:3cqw;color:#6E6976">第 0 格 · 画歪了</span>
+                <span class="chip plain" style="font-size:2.6cqw">返回</span>
+              </div>
+
+              <div style="display:flex;justify-content:center;margin-top:7cqw">
+                <span class="burst big">啪！</span>
+              </div>
+
+              <h3 class="hero-title" style="font-size:7.4cqw;margin-top:6.4cqw;text-align:center">这次没画完</h3>
+              <p style="font-size:3.2cqw;color:#5C5665;text-align:center;margin:1.6cqw 0 0">AI 返回的题目结构不完整，已自动重试 1 次</p>
+
+              <div class="panel" style="margin-top:4.6cqw;padding:3.4cqw 3cqw">
+                <span class="corner">发生了什么</span>
+                <div style="display:flex;flex-direction:column;gap:1.8cqw;margin-top:2cqw;font-size:3cqw;color:#4A4453">
+                  <div style="display:flex;gap:2cqw"><span>·</span><span>检索到了资料，但有一条来源打不开</span></div>
+                  <div style="display:flex;gap:2cqw"><span>·</span><span>第 4 题缺少正确答案字段，被校验拦下</span></div>
+                  <div style="display:flex;gap:2cqw"><span>·</span><span>本次不计入额度</span></div>
+                </div>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw">
+                <div class="btn">再画一次</div>
+                <div class="btn ghost" style="margin-top:3cqw">先做 3 道简单题试试</div>
+                <div style="display:flex;gap:1.6cqw;flex-wrap:wrap;justify-content:center;margin-top:3.4cqw">
+                  <span class="chip plain" style="font-size:2.5cqw;padding:.5cqw 1.6cqw">试试「RAG 是什么」</span>
+                  <span class="chip plain" style="font-size:2.5cqw;padding:.5cqw 1.6cqw">试试「向量检索」</span>
+                </div>
+                <p style="text-align:center;font-size:2.5cqw;color:#8A8494;margin:2cqw 0 4.4cqw">也可以换个说法，比如只输入「RAG 是什么」</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 05 单选 -->
+      <div class="col">
+        <p class="cap"><span class="no">05</span><b>闯关 · 单选题</b><em>格位即进度，一格一题</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4.4cqw">
+                <div class="cells"><i class="ok"></i><i class="now"></i><i></i><i></i><i></i></div>
+                <span class="chip y" style="font-size:2.6cqw;padding:.8cqw 2cqw">＋24 XP</span>
+              </div>
+              <div class="meta" style="margin-top:2.2cqw"><span>第 <b>2</b> 格 / 共 5 格</span><span>还剩 <b>4</b> 题</span></div>
+
+              <div class="panel" style="margin-top:4.2cqw;padding:3.4cqw 3.2cqw">
+                <span class="corner">Q2 · 单选</span>
+                <p class="stem">RAG 里那个 <span style="background:#FFC93C;padding:0 .4cqw">R</span>（Retrieval）主要在做什么？</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:3.2cqw;margin-top:4.4cqw">
+                <div class="opt"><span class="key">A</span><span class="txt">先把相关资料检索出来，再喂给模型</span></div>
+                <div class="opt"><span class="key">B</span><span class="txt">重新训练一遍模型，让它背下新知识</span></div>
+                <div class="opt"><span class="key">C</span><span class="txt">把用户的问题翻译成搜索关键词</span></div>
+                <div class="opt"><span class="key">D</span><span class="txt">对模型输出做一遍语法检查</span></div>
+              </div>
+
+              <div style="margin-top:3.4cqw;border:2px dashed rgba(23,21,26,.4);border-radius:1.5cqw;padding:2.5cqw 2.8cqw;font-size:2.9cqw;color:#5C5665;display:flex;gap:1.8cqw">
+                <span style="flex:0 0 auto;font-family:'ZCOOL QingKe HuangYou';color:#E4443A;font-size:3.1cqw">提示</span>
+                <span>R / A / G 三个字母分别代表什么？先拆开想。</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:2cqw;margin-top:2.4cqw;font-size:2.6cqw;color:#8A8494">
+                <span>本题 3 分</span><span>·</span><span>建议 40 秒</span>
+                <span style="margin-left:auto" class="hand">已用时 00:12</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw">
+                <div class="btn blue">就选它</div>
+                <p style="text-align:center;font-size:2.5cqw;color:#8A8494;margin:1.8cqw 0 0">单选题点选项即判定，不用再点按钮</p>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 06 多选 -->
+      <div class="col">
+        <p class="cap"><span class="no">06</span><b>闯关 · 多选题</b><em>方形勾选框 + 已选计数</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4.4cqw">
+                <div class="cells"><i class="ok"></i><i class="ok"></i><i class="now"></i><i></i><i></i></div>
+                <span class="chip y" style="font-size:2.6cqw;padding:.8cqw 2cqw">＋24 XP</span>
+              </div>
+              <div class="meta" style="margin-top:2.2cqw"><span>第 <b>3</b> 格 / 共 5 格</span><span>多选题 · 选 <b>2</b> 项</span></div>
+
+              <div class="panel" style="margin-top:4.2cqw;padding:3.4cqw 3.2cqw">
+                <span class="corner">Q3 · 多选</span>
+                <p class="stem" style="font-size:4.5cqw">一次完整的 RAG 流程，通常包含下面哪些环节？</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:2.9cqw;margin-top:4cqw">
+                <div class="opt pick"><span class="key sq">✓</span><span class="txt">把文档切块并转成向量，存进向量库</span></div>
+                <div class="opt"><span class="key sq">B</span><span class="txt">用全量数据重新训练基础模型</span></div>
+                <div class="opt pick"><span class="key sq">✓</span><span class="txt">根据问题检索出最相关的若干片段</span></div>
+                <div class="opt"><span class="key sq">D</span><span class="txt">把检索结果和问题一起交给模型生成答案</span></div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:2cqw;margin-top:3.2cqw;font-size:2.9cqw;color:#5C5665">
+                <span class="chip" style="font-size:2.6cqw;padding:.6cqw 1.8cqw;box-shadow:none;background:#EAF1FF">已选 2 项</span>
+                <span class="hand">漏选会扣一半分哦</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw">
+                <div class="btn blue">提交答案</div>
+                <p style="text-align:center;font-size:2.5cqw;color:#8A8494;margin:1.8cqw 0 0">选完可改，确认后才判定</p>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ==================== ROW 3 ==================== -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>③ 判断 &amp; 即时反馈</h2><p>反馈必须在点下去的一瞬间发生：拟声词定情绪，红笔定对错，旁白框讲道理</p></div>
+    <div class="grid">
+
+      <!-- 07 判断题 -->
+      <div class="col">
+        <p class="cap"><span class="no">07</span><b>闯关 · 判断题</b><em>只有两个答案，就给两个大目标</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:4.4cqw">
+                <div class="cells"><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="now"></i></div>
+                <span class="chip y" style="font-size:2.6cqw;padding:.8cqw 2cqw">＋16 XP</span>
+              </div>
+              <div class="meta" style="margin-top:2.2cqw"><span>第 <b>5</b> 格 / 共 5 格</span><span>最后一题</span></div>
+
+              <div class="panel" style="margin-top:4.2cqw;padding:3.4cqw 3.2cqw">
+                <span class="corner">Q5 · 判断</span>
+                <p class="stem" style="font-size:4.5cqw">「用了 RAG，模型就能永久记住这些新知识。」</p>
+              </div>
+
+              <p style="font-size:2.9cqw;color:#6E6976;margin:3.4cqw 0 0;text-align:center" class="hand">这句话是对还是错？</p>
+
+              <div class="judge" style="margin-top:3.4cqw">
+                <div class="no"><div class="ico">✕</div><div class="lb">错</div></div>
+                <div class="yes"><div class="ico">✓</div><div class="lb">对</div></div>
+              </div>
+
+              <div style="margin-top:3.6cqw;border:2px dashed rgba(23,21,26,.4);border-radius:1.5cqw;padding:2.5cqw 2.8cqw;font-size:2.9cqw;color:#5C5665;display:flex;gap:1.8cqw">
+                <span style="flex:0 0 auto;font-family:'ZCOOL QingKe HuangYou';color:#E4443A;font-size:3.1cqw">想一想</span>
+                <span>"永久记住"这四个字，是检索增强还是参数微调？</span>
+              </div>
+
+              <div class="panel" style="margin-top:3.6cqw;padding:2.8cqw 3cqw">
+                <span class="corner">本题考点</span>
+                <div style="display:flex;align-items:center;gap:2cqw;margin-top:2cqw;font-size:2.9cqw;color:#4A4453">
+                  <span class="chip plain" style="font-size:2.4cqw;padding:.4cqw 1.5cqw"># 参数 vs 外挂</span>
+                  <span class="chip plain" style="font-size:2.4cqw;padding:.4cqw 1.5cqw"># 记忆机制</span>
+                </div>
+                <p class="hand" style="font-size:2.7cqw;color:#8A8494;margin:1.8cqw 0 0">答完这题，本关就通关了</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:2.2cqw;margin-top:3.2cqw;border:2px solid #17151A;border-radius:1.4cqw;background:#DFF3E6;padding:2.4cqw 2.6cqw">
+                <span style="font-family:'ZCOOL QingKe HuangYou';font-size:4.4cqw;line-height:1">🔥</span>
+                <span style="font-size:2.9cqw">已连对 <b>4</b> 题，这题拿下就满格</span>
+              </div>
+
+              <div class="sp"></div>
+              <p style="text-align:center;font-size:2.5cqw;color:#8A8494;margin:0 0 3cqw">判断题点即判定，答错不扣 XP</p>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 08 答对 -->
+      <div class="col">
+        <p class="cap"><span class="no">08</span><b>答对反馈</b><em>"叮"是这套视觉里唯一的高音</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;gap:2.4cqw;padding-top:3.2cqw">
+                <span class="burst ok">叮！</span>
+                <span style="font-family:'ZCOOL KuaiLe';font-size:3.4cqw">第 2 格 · 判定</span>
+                <span class="chip g" style="margin-left:auto;font-size:2.6cqw;padding:.8cqw 1.8cqw;box-shadow:none">＋12 XP</span>
+              </div>
+
+              <div class="panel" style="margin-top:5.4cqw;padding:3.2cqw">
+                <p class="stem" style="font-size:4.2cqw">RAG 和最常用的「微调」，最本质的区别是？</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:2.9cqw;margin-top:3.4cqw">
+                <div class="opt right has-mark"><span class="key">A</span><span class="txt">RAG 改的是"能不能查到"，微调改的是"模型本身"</span><span class="mark">✓</span></div>
+                <div class="opt dim"><span class="key">B</span><span class="txt">RAG 更便宜，微调更贵</span></div>
+                <div class="opt dim"><span class="key">C</span><span class="txt">RAG 只能用于搜索，微调只能用于写作</span></div>
+                <div class="opt dim"><span class="key">D</span><span class="txt">两者完全等价，只是叫法不同</span></div>
+              </div>
+
+              <div class="note" style="margin-top:3.2cqw">
+                <span class="who">AI 教练说</span>
+                <p>RAG 像<b>开卷考试</b>：不背书，先翻书找段落（Retrieval），再结合问题作答（Generation）。所以它<span class="hl">记得新，但不会"长记性"</span>。</p>
+                <p class="k" style="margin-top:1cqw;color:#6E6976">要真的"写进脑子里"，那才需要微调。</p>
+              </div>
+
+              <div class="remember" style="margin-top:2.6cqw">
+                <b>记住</b><span>RAG = 先查资料，再回答。</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw"><div class="btn">下一格 →</div></div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 09 答错 -->
+      <div class="col">
+        <p class="cap"><span class="no">09</span><b>答错反馈</b><em>红笔不骂人，只把对的圈出来</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;gap:2.4cqw;padding-top:3.2cqw">
+                <span class="burst">啪！</span>
+                <span style="font-family:'ZCOOL KuaiLe';font-size:3.4cqw">差一点</span>
+                <span class="chip" style="margin-left:auto;font-size:2.5cqw;padding:.7cqw 1.8cqw;box-shadow:none;background:#fff">未得分</span>
+              </div>
+
+              <div class="panel" style="margin-top:5.4cqw;padding:3.2cqw">
+                <p class="stem" style="font-size:4.2cqw">「用了 RAG，模型就能永久记住这些新知识。」</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:2.9cqw;margin-top:3.4cqw">
+                <div class="opt wrong has-mark"><span class="key">✓</span><span class="txt">对 · 你选的</span><span class="mark">✕</span></div>
+                <div class="opt right has-mark"><span class="key">✕</span><span class="txt">错 · 这才是答案</span><span class="mark">✓</span></div>
+              </div>
+
+              <div class="note" style="margin-top:3.6cqw;background:#FFF1EC">
+                <span class="who" style="background:#E4443A;color:#fff">错在哪</span>
+                <p>RAG <b>没有改变模型参数</b>，知识存在外部的文档库里。关掉检索，模型还是原来那个。</p>
+                <p class="k" style="margin-top:1cqw;color:#6E6976">「永久记住」＝ 微调（Fine-tuning），不是 RAG。</p>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:2cqw;margin-top:2.8cqw">
+                <span class="tagrow"><span># 检索增强</span><span># 参数 vs 外挂</span></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:2cqw;margin-top:2.4cqw;font-size:2.6cqw;color:#8A8494">
+                <span>本题 1 分</span><span>·</span><span>用时 21 秒</span>
+                <span style="margin-left:auto" class="hand">已存入错题本</span>
+              </div>
+
+              <div class="hand" style="display:flex;align-items:center;gap:2.6cqw;font-size:2.9cqw;color:#6E6976;margin-top:3.4cqw">
+                举一反三 <span style="flex:1;height:1px;background:repeating-linear-gradient(to right,#C9BC9E 0 4px,transparent 4px 8px)"></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:2cqw;margin-top:1.6cqw;border-bottom:1px dashed #D2C6A9;padding-bottom:1.8cqw;font-size:2.9cqw">
+                <span style="width:4.4cqw;height:4.4cqw;border-radius:50%;border:1.5px solid #B9AC90;display:flex;align-items:center;justify-content:center;font-size:2.2cqw;color:#6B6252;flex:0 0 auto">Q</span>
+                <span>什么时候该用微调而不是 RAG？</span>
+                <span style="margin-left:auto;color:#B5A98C">›</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw">
+                <div class="btn">下一格 →</div>
+                <div class="btn ghost" style="margin-top:2.6cqw">＋ 加入错题本</div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ==================== ROW 4 ==================== -->
+<section>
+  <div class="wrap">
+    <div class="sec-head"><h2>④ 结算 / 复盘 / 分享</h2><p>奖励要具体，复盘要具体，海报要像"一本漫画的封面"</p></div>
+    <div class="grid">
+
+      <!-- 10 结算 -->
+      <div class="col">
+        <p class="cap"><span class="no">10</span><b>关卡结算</b><em>盖章 + 数字，先给情绪再给账</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;flex-direction:column;align-items:center;padding-top:6cqw">
+                <div class="seal"><span class="big">通关</span><span class="small">5 / 5 格</span></div>
+                <h3 class="hero-title" style="font-size:7cqw;margin-top:4cqw;text-align:center">RAG 入门<br>打通了<span style="color:#E4443A">！</span></h3>
+                <p class="hand" style="font-size:3.1cqw;color:#6E6976;margin:1cqw 0 0">用时 3 分 12 秒 · 比上次快 40 秒</p>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.2cqw;margin-top:5cqw">
+                <div style="border:2px solid #17151A;border-radius:1.6cqw;background:#FFC93C;padding:2.4cqw;text-align:center;box-shadow:1.4cqw 1.4cqw 0 #17151A">
+                  <div style="font-family:'ZCOOL QingKe HuangYou';font-size:6.2cqw;line-height:1.05">+180</div>
+                  <div style="font-size:2.4cqw;margin-top:.3cqw">经验值 XP</div>
+                </div>
+                <div style="border:2px solid #17151A;border-radius:1.6cqw;background:#DFF3E6;padding:2.4cqw;text-align:center;box-shadow:1.4cqw 1.4cqw 0 #17151A">
+                  <div style="font-family:'ZCOOL QingKe HuangYou';font-size:6.2cqw;line-height:1.05">+30</div>
+                  <div style="font-size:2.4cqw;margin-top:.3cqw">金币</div>
+                </div>
+                <div class="score-cell"><div class="v">4/5</div><div class="l">答对题数</div></div>
+                <div class="score-cell"><div class="v">80<span style="font-size:3.4cqw">%</span></div><div class="l">正确率</div></div>
+              </div>
+
+              <div class="panel" style="margin-top:4.4cqw;padding:3cqw">
+                <span class="corner">本关五格</span>
+                <div class="cells" style="margin-top:2.2cqw;justify-content:space-between">
+                  <i class="ok"></i><i class="ok"></i><i class="ok"></i><i class="bad"></i><i class="ok"></i>
+                </div>
+                <p class="hand" style="font-size:2.8cqw;color:#6E6976;margin:2.2cqw 0 0">第 4 格「RAG 能不能让模型记住」答错了，已收进错题本。</p>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw">
+                <div class="btn blue">看复盘报告 →</div>
+                <div class="btn ghost" style="margin-top:2.6cqw">再来一关</div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11 复盘报告 -->
+      <div class="col">
+        <p class="cap"><span class="no">11</span><b>复盘报告</b><em>报告像老师批过的卷子</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:3.6cqw">
+                <span class="hand" style="font-size:2.9cqw;color:#6E6976">10 月 25 日 · RAG 入门</span>
+                <span class="chip plain" style="font-size:2.5cqw">保存</span>
+              </div>
+
+              <h3 class="hero-title" style="font-size:6.6cqw;margin-top:2.6cqw">复盘报告</h3>
+
+              <div class="panel" style="margin-top:3.6cqw;padding:3.4cqw 3cqw">
+                <span class="corner">成绩单</span>
+                <div style="display:flex;align-items:center;gap:3cqw;margin-top:2cqw">
+                  <div style="position:relative;width:30cqw;height:30cqw;flex:0 0 auto">
+                    <svg viewBox="0 0 36 36" style="width:100%;height:100%;transform:rotate(-90deg)">
+                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="#E8DFC8" stroke-width="3.4"/>
+                      <circle cx="18" cy="18" r="15.5" fill="none" stroke="#2FA96B" stroke-width="3.4"
+                              stroke-dasharray="77.9 97.4" stroke-linecap="round"/>
+                    </svg>
+                    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                      <span style="font-family:'ZCOOL QingKe HuangYou';font-size:8.4cqw;line-height:1">80<span style="font-size:3.4cqw">%</span></span>
+                      <span style="font-size:2.3cqw;color:#6E6976">正确率</span>
+                    </div>
+                  </div>
+                  <div style="flex:1">
+                    <div class="pt" style="margin-bottom:1.6cqw"><span class="b g">✓</span><span>检索流程、向量化</span></div>
+                    <div class="pt" style="margin-bottom:1.6cqw"><span class="b g">✓</span><span>RAG 与微调的边界</span></div>
+                    <div class="pt"><span class="b r">✕</span><span>模型"记忆"的机制</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:3.6cqw">
+                <div style="display:flex;align-items:center;gap:1.6cqw;font-size:3cqw;color:#6E6976" class="hand">
+                  三句话总结 <span style="flex:1;height:1px;background:repeating-linear-gradient(to right,#C9BC9E 0 4px,transparent 4px 8px)"></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2cqw;margin-top:2cqw">
+                  <div class="sum-item"><span class="n">1</span><span>RAG 解决的是"<span class="hl">知识过时</span>"，不是"模型变笨"。</span></div>
+                  <div class="sum-item"><span class="n">2</span><span>检索质量决定上限，生成模型只负责把话说顺。</span></div>
+                  <div class="sum-item"><span class="n">3</span><span>要让它"记住"，得走微调，代价是钱和时间。</span></div>
+                </div>
+              </div>
+
+              <div class="note" style="margin-top:3.4cqw;background:#FFF6D8">
+                <span class="who">下一步建议</span>
+                <p class="k">① 明天重做第 4 格；② 顺手看看「向量库怎么选」，这是 RAG 落地的第一道坎。</p>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-bottom:2.6cqw"><div class="btn">生成分享海报</div></div>
+            </div>
+            <div class="tabbar">
+              <div><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12 分享海报 -->
+      <div class="col">
+        <p class="cap"><span class="no">12</span><b>分享海报</b><em>像一本漫画的封面，而不是一张数据图</em></p>
+        <div class="phone">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:3.6cqw">
+                <span class="hand" style="font-size:2.9cqw;color:#6E6976">长按可保存</span>
+                <span class="chip plain" style="font-size:2.5cqw">✕</span>
+              </div>
+
+              <div style="flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:3.6cqw;min-height:0">
+              <div class="poster">
+                <span class="seal2">鱼皮<br>闯关</span>
+                <p class="hand" style="position:relative;font-size:2.6cqw;letter-spacing:.16em;color:#6E6976;margin:0 0 1.2cqw">第 12 期 · RAG 入门</p>
+                <h4 class="ttl">今天我又<br>闯过了<br><span style="background:#FFC93C;padding:0 .5cqw">一个知识关卡</span></h4>
+                <p class="quote">"RAG 不是让模型变聪明，<br>是让它学会<b>先查资料</b>。"</p>
+
+                <div class="hairline"></div>
+
+                <div class="row2">
+                  <div class="stat">
+                    <div><span>5</span><small>关卡</small></div>
+                    <div><span>80%</span><small>正确率</small></div>
+                    <div><span>+180</span><small>XP</small></div>
+                  </div>
+                  <div class="qr"></div>
+                </div>
+
+                <p class="hand" style="position:relative;font-size:2.3cqw;color:#7A7468;margin:2.4cqw 0 0">扫码也来出一套属于你的题</p>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:2.2cqw">
+                <span class="hand" style="font-size:2.7cqw;color:#6E6976">换个样式</span>
+                <span style="width:7cqw;height:7cqw;border:2px solid #17151A;border-radius:1cqw;background:#FFC93C"></span>
+                <span style="width:7cqw;height:7cqw;border:2px solid rgba(23,21,26,.35);border-radius:1cqw;background:#FFFCF0"></span>
+                <span style="width:7cqw;height:7cqw;border:2px solid rgba(23,21,26,.35);border-radius:1cqw;background:#D9E6FF"></span>
+              </div>
+
+              </div>
+
+              <p class="hand" style="text-align:center;font-size:2.5cqw;color:#8A8494;margin:2.6cqw 0 2.4cqw">海报不含排名与分数对比，只有你自己的进步</p>
+              <div style="display:flex;gap:2.4cqw;margin-bottom:2.6cqw">
+                <div class="btn ghost" style="flex:1;font-size:3.4cqw;padding:2.9cqw">保存到相册</div>
+                <div class="btn" style="flex:1.3;font-size:3.4cqw;padding:2.9cqw;box-shadow:1.8cqw 1.8cqw 0 #17151A">发给好友</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="legend">
+      <div><b>本文件覆盖</b>P0 闭环的 12 个关键状态：空态 / 输入完成 / 生成中 / 生成失败 / 单选 / 多选 / 判断 / 答对 / 答错 / 结算 / 复盘 / 海报。</div>
+      <div><b>暂未覆盖（下一批）</b>微信授权弹窗、额度不足、敏感词拦截提示、断网重连、分享到朋友圈的二次确认。</div>
+      <div><b>尺寸与实现</b>画布按 9:17.4 等比，所有内部尺寸用容器查询单位（cqw）书写，落地到 Taro 时按 375 基准除以 100 换成 rpx 即可。</div>
+    </div>
+    <p style="margin-top:18px"><b>版权说明：</b>只借鉴《阿衰》的漫画语言（分镜格、粗描边、网点、拟声词、红笔批改），<b>不使用其任何角色形象、画面、字体或商标</b>。本版未引入吉祥物。</p>
+    <p style="opacity:.75">v1.0 · 01 核心闭环 · 静态展示稿 · 等待你确认后再产出 02 学习档案</p>
+  </div>
+</footer>
+
+</body>
+</html>

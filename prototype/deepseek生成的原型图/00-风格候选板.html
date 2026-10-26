@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鱼皮 AI 闯关学习小程序 · UI 风格候选板 v0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   风格候选板 · 板面（中性纸感，不干扰方案本身）
+   ============================================================ */
+:root{
+  --board:#EDE8DE;
+  --ink:#1A1820;
+  --muted:#6B6675;
+  --hair:rgba(26,24,32,.13);
+  --card:#FCFAF5;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--board);
+  color:var(--ink);
+  font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.6;
+}
+.wrap{max-width:1440px;margin:0 auto;padding:0 clamp(16px,4vw,56px)}
+
+/* ---------- 顶部 ---------- */
+.board-head{padding:clamp(40px,6vw,80px) 0 28px;border-bottom:1px solid var(--hair)}
+.kicker{
+  display:inline-block;font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--hair);border-radius:999px;
+  padding:5px 14px;margin:0 0 18px;background:rgba(255,255,255,.5);
+}
+.board-head h1{
+  font-family:"ZCOOL KuaiLe","Noto Sans SC",sans-serif;
+  font-size:clamp(30px,4.6vw,54px);line-height:1.18;margin:0 0 14px;letter-spacing:.01em;
+}
+.board-head .sub{font-size:clamp(14px,1.4vw,17px);color:#4C4757;max-width:60ch;margin:0}
+.meta-list{display:flex;flex-wrap:wrap;gap:10px;list-style:none;padding:0;margin:26px 0 0}
+.meta-list li{
+  font-size:12.5px;color:#443F4F;background:#fff;border:1px solid var(--hair);
+  border-radius:8px;padding:7px 12px;
+}
+.meta-list b{font-weight:700}
+
+/* ---------- 锚点导航 ---------- */
+.jump{position:sticky;top:0;z-index:30;background:rgba(237,232,222,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--hair);}
+.jump .wrap{display:flex;gap:8px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+.jump .wrap::-webkit-scrollbar{display:none}
+.jump a{
+  flex:0 0 auto;font-size:13px;color:#3C3849;text-decoration:none;border:1px solid var(--hair);
+  background:#fff;border-radius:999px;padding:6px 14px;white-space:nowrap;transition:.18s;
+}
+.jump a:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ---------- 通用区块 ---------- */
+section{padding:clamp(44px,5vw,72px) 0}
+.sec-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.sec-head h2{
+  font-family:"ZCOOL KuaiLe","Noto Sans SC",sans-serif;
+  font-size:clamp(23px,2.6vw,32px);margin:0;line-height:1.25;
+}
+.sec-head p{margin:0;color:var(--muted);font-size:14px;max-width:62ch}
+.rule{height:1px;background:var(--hair);border:0;margin:0 0 34px}
+
+/* ---------- 方向导语三卡 ---------- */
+.intro-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.intro-card{
+  background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:22px 22px 20px;
+  position:relative;overflow:hidden;
+}
+.intro-card .no{
+  font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:52px;line-height:1;
+  color:rgba(26,24,32,.10);position:absolute;right:14px;top:6px;
+}
+.intro-card h3{margin:0 0 6px;font-size:18px;letter-spacing:.01em}
+.intro-card .one-liner{margin:0 0 12px;font-size:13.5px;color:#5A5466}
+.intro-card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.intro-card .tags span{font-size:11.5px;padding:4px 9px;border-radius:6px;background:rgba(26,24,32,.06);color:#494353}
+.intro-card .sw{display:flex;gap:5px;margin-top:14px}
+.intro-card .sw i{width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.12)}
+
+/* ---------- 方向区块 ---------- */
+.dir{padding-top:clamp(38px,4.4vw,60px)}
+.dir-head{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;margin-bottom:24px}
+.dir-head .tag{
+  display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.16em;
+  color:var(--muted);margin-bottom:10px;
+}
+.dir-head .tag b{color:var(--ink);font-size:13px;letter-spacing:0}
+.dir-head h2{
+  font-family:"ZCOOL KuaiLe","Noto Sans SC",sans-serif;
+  font-size:clamp(24px,3vw,38px);margin:0 0 8px;line-height:1.2;
+}
+.dir-head p{margin:0;color:#4F4A5C;font-size:14.5px;max-width:66ch}
+.dir-head .verdict{
+  font-size:12.5px;border:1px dashed var(--hair);border-radius:10px;padding:10px 14px;
+  color:#4F4A5C;background:rgba(255,255,255,.6);max-width:220px;
+}
+.dir-head .verdict b{display:block;color:var(--ink);font-size:12px;letter-spacing:.12em;margin-bottom:4px}
+
+/* ---------- 规格面板 ---------- */
+.spec{display:grid;grid-template-columns:1.05fr 1fr 1.15fr;gap:14px;margin-bottom:26px}
+@media (max-width:1080px){.spec{grid-template-columns:1fr 1fr}}
+@media (max-width:720px){.spec{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:18px 20px 20px}
+.panel h4{
+  margin:0 0 14px;font-size:12px;letter-spacing:.18em;color:var(--muted);font-weight:600;
+  display:flex;align-items:center;gap:8px;
+}
+.panel h4::after{content:"";flex:1;height:1px;background:var(--hair)}
+
+.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.swatches .sw i{display:block;height:46px;border-radius:9px;border:1px solid rgba(0,0,0,.14)}
+.swatches .sw b{display:block;font-size:12px;margin-top:7px;font-weight:600}
+.swatches .sw code{font-size:10.5px;color:var(--muted);font-family:ui-monospace,"Cascadia Mono",Consolas,monospace}
+
+.type-spec>div{border-bottom:1px dashed var(--hair);padding:8px 0}
+.type-spec>div:last-child{border-bottom:0;padding-bottom:0}
+.type-spec small{display:block;font-size:10.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:2px}
+.t-h1{font-size:26px;line-height:1.2}
+.t-h2{font-size:18px;line-height:1.3;font-weight:700}
+.t-body{font-size:13.5px;color:#3F3A4C}
+.t-cap{font-size:11.5px;color:var(--muted)}
+
+.demo-row{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.points{list-style:none;padding:0;margin:14px 0 0;font-size:13px;color:#464152}
+.points li{position:relative;padding-left:16px;margin-bottom:6px}
+.points li::before{content:"—";position:absolute;left:0;color:#A8A2B4}
+
+/* ---------- 手机 ---------- */
+.phones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2.2vw,30px);max-width:1220px;margin:0 auto}
+@media (max-width:980px){.phones{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.phones{grid-template-columns:1fr}}
+.phone-col{min-width:0}
+.phone-cap{
+  font-size:12px;color:var(--muted);margin:0 0 9px;padding-left:3px;display:flex;align-items:center;gap:7px;
+}
+.phone-cap b{color:var(--ink);font-weight:600;font-size:12.5px}
+.phone-cap em{font-style:normal;font-size:11px;opacity:.7}
+
+.phone{
+  position:relative;width:100%;aspect-ratio:9/17.4;
+  border-radius:30px;overflow:hidden;container-type:inline-size;
+  background:#fff;
+}
+.scr{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  font-size:3.95cqw;line-height:1.46;overflow:hidden;
+}
+
+/* 状态栏 */
+.statusbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:2.4cqw 3.4cqw 0.6cqw;font-size:2.9cqw;font-weight:700;letter-spacing:.02em;
+  flex:0 0 auto;position:relative;z-index:5;
+}
+.statusbar .icons{display:flex;align-items:center;gap:1.4cqw}
+.sig{display:flex;align-items:flex-end;gap:.35cqw}
+.sig i{width:.8cqw;background:currentColor;border-radius:.3cqw;display:block}
+.sig i:nth-child(1){height:1.2cqw}.sig i:nth-child(2){height:1.9cqw}
+.sig i:nth-child(3){height:2.6cqw}.sig i:nth-child(4){height:3.3cqw}
+.bat{position:relative;width:5.6cqw;height:2.9cqw;border:1px solid currentColor;border-radius:.7cqw;padding:.35cqw}
+.bat i{display:block;height:100%;width:74%;background:currentColor;border-radius:.3cqw}
+
+/* 微信胶囊按钮 */
+.capsule{
+  position:absolute;top:3.1cqw;right:2.6cqw;z-index:9;
+  display:flex;align-items:center;justify-content:space-around;
+  width:20cqw;height:6.6cqw;border-radius:999px;
+  border:1px solid rgba(0,0,0,.14);background:rgba(255,255,255,.72);
+  backdrop-filter:blur(4px);
+}
+.capsule span{display:block;font-size:3.1cqw;line-height:1;color:#3A3648}
+.capsule .ring{
+  width:3.1cqw;height:3.1cqw;border-radius:50%;border:1.3px solid #3A3648;
+}
+
+/* 屏幕滚动内容 */
+.body{flex:1 1 auto;overflow:hidden;position:relative;z-index:2;display:flex;flex-direction:column}
+.body>*{flex-shrink:0}
+.sp{flex:1 1 auto;min-height:0}
+.pad{padding:0 4.6cqw}
+
+/* 底部 tabbar（通用） */
+.tabbar{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-around;
+  padding:2.2cqw 0 3.4cqw;position:relative;z-index:4;
+}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:.7cqw;font-size:2.5cqw;opacity:.45}
+.tabbar div.on{opacity:1;font-weight:700}
+.tabbar svg{width:5.6cqw;height:5.6cqw;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ============================================================
+   方案 A ·「漫格」油墨四格
+   ============================================================ */
+.skin-a{
+  --ink:#17151A; --paper:#FFFCF0; --yellow:#FFC93C; --blue:#2F6BE4;
+  --red:#FF4B3E; --green:#2FA96B; --tone:#E2DDC9;
+  border:3px solid var(--ink);
+  box-shadow:8px 8px 0 var(--ink);
+  background:var(--paper);
+}
+.skin-a .scr{
+  background-color:var(--paper);
+  background-image:radial-gradient(var(--tone) 1px, transparent 1.15px);
+  background-size:3.6cqw 3.6cqw;
+  color:var(--ink);
+}
+.skin-a .statusbar{color:var(--ink)}
+.skin-a .capsule{background:rgba(255,252,240,.9);border-color:rgba(23,21,26,.28)}
+.skin-a .capsule span,.skin-a .capsule .ring{color:var(--ink);border-color:var(--ink)}
+
+.a-logo{
+  display:inline-flex;align-items:center;gap:1.6cqw;font-family:"ZCOOL KuaiLe",sans-serif;
+  font-size:5.2cqw;line-height:1;padding:.4cqw 0;
+}
+.a-logo .stamp{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:8.6cqw;height:8.6cqw;border:2.5px solid var(--ink);border-radius:2cqw;
+  background:var(--yellow);transform:rotate(-6deg);
+  font-size:4.4cqw;font-family:"ZCOOL QingKe HuangYou",sans-serif;
+  box-shadow:2px 2px 0 var(--ink);
+}
+.a-title{font-family:"ZCOOL KuaiLe",sans-serif;font-size:10.4cqw;line-height:1.12;margin:0}
+.a-sub{font-size:3.4cqw;color:#57525F;margin:1.6cqw 0 0;line-height:1.5}
+
+.a-panel{
+  border:2.5px solid var(--ink);border-radius:2.4cqw;background:#fff;
+  box-shadow:2.4cqw 2.4cqw 0 var(--ink);position:relative;
+}
+.a-panel .corner{
+  position:absolute;top:-2.4cqw;left:3cqw;background:var(--ink);color:var(--paper);
+  font-size:2.6cqw;letter-spacing:.08em;padding:.5cqw 1.6cqw;border-radius:1cqw;
+}
+.a-input{
+  display:flex;align-items:flex-start;gap:2cqw;padding:3.4cqw 3.2cqw;
+  font-family:"ZCOOL KuaiLe",sans-serif;font-size:4.2cqw;line-height:1.5;min-height:20cqw;
+}
+.a-input .cursor{
+  display:inline-block;width:2px;height:4.4cqw;background:var(--red);
+  vertical-align:-0.7cqw;animation:blink 1.05s steps(1) infinite;
+}
+@keyframes blink{50%{opacity:0}}
+.a-ph{color:#9A9486}
+
+.a-chip{
+  display:inline-flex;align-items:center;gap:1.2cqw;font-size:3cqw;
+  border:2px solid var(--ink);border-radius:999px;padding:1.3cqw 2.6cqw;background:#fff;
+  box-shadow:1.4cqw 1.4cqw 0 rgba(23,21,26,.9);
+}
+.a-chip:nth-child(2){background:var(--yellow)}
+.a-chip:nth-child(3){background:#CFE0FF}
+
+.a-btn{
+  display:flex;align-items:center;justify-content:center;gap:1.8cqw;
+  width:100%;padding:4.2cqw;border:2.5px solid var(--ink);border-radius:2.6cqw;
+  background:var(--yellow);color:var(--ink);
+  font-family:"ZCOOL KuaiLe",sans-serif;font-size:5cqw;letter-spacing:.04em;
+  box-shadow:2.6cqw 2.6cqw 0 var(--ink);
+}
+.a-btn.solid{background:var(--blue);color:#fff}
+.a-btn:active{transform:translate(1.2cqw,1.2cqw);box-shadow:1.4cqw 1.4cqw 0 var(--ink)}
+
+.a-xp{
+  display:flex;align-items:center;gap:3cqw;font-size:2.9cqw;
+  border-top:2px dashed rgba(23,21,26,.35);padding-top:2.6cqw;
+}
+.a-xp .coin{
+  width:5cqw;height:5cqw;border-radius:50%;border:2px solid var(--ink);
+  background:var(--yellow);display:inline-flex;align-items:center;justify-content:center;
+  font-size:2.5cqw;font-family:"ZCOOL QingKe HuangYou",sans-serif;
+}
+.a-streak{display:flex;align-items:center;gap:1cqw}
+.a-streak .flame{font-size:3.4cqw;line-height:1}
+
+/* A · 答题 */
+.a-topbar{display:flex;align-items:center;justify-content:space-between;gap:2cqw;padding-top:4.6cqw}
+.a-cells{display:flex;gap:1.4cqw;align-items:center}
+.a-cells i{
+  width:5.6cqw;height:5.6cqw;border:2px solid var(--ink);border-radius:.8cqw;
+  background:#fff;display:block;position:relative;
+}
+.a-cells i.done{background:var(--ink)}
+.a-cells i.now{background:var(--yellow);transform:scale(1.12)}
+.a-cells i.now::after{content:"";position:absolute;inset:-1.4cqw;border:1px solid rgba(23,21,26,.45);border-radius:1.2cqw}
+.a-metaline{display:flex;justify-content:space-between;font-size:2.7cqw;color:#5A5464;margin-top:2.2cqw}
+.a-metaline b{color:var(--ink)}
+
+.a-stem{font-family:"ZCOOL KuaiLe",sans-serif;font-size:4.9cqw;line-height:1.42;margin:0}
+.a-opt{
+  display:flex;gap:2.4cqw;align-items:flex-start;
+  border:2.2px solid var(--ink);border-radius:1.6cqw 1.6cqw 1.6cqw .5cqw;
+  background:#fff;padding:2.9cqw 3cqw;position:relative;
+}
+.a-opt .key{
+  flex:0 0 auto;width:6.2cqw;height:6.2cqw;border-radius:50%;border:2px solid var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:3.4cqw;background:var(--paper);
+}
+.a-opt .txt{font-size:3.7cqw;line-height:1.4}
+.a-opt.pick{border-width:2.8px;box-shadow:1.8cqw 1.8cqw 0 var(--blue);background:#EAF1FF}
+.a-opt.pick .key{background:var(--blue);color:#fff;border-color:var(--ink)}
+.a-opt.right{background:#E6F7EC;box-shadow:1.8cqw 1.8cqw 0 var(--green)}
+.a-opt.right .key{background:var(--green);color:#fff}
+.a-opt.wrong{background:#FFECE9;box-shadow:1.8cqw 1.8cqw 0 var(--red)}
+.a-opt.wrong .key{background:var(--red);color:#fff}
+.a-mark{position:absolute;right:1.6cqw;top:1cqw;font-size:4.4cqw;line-height:1}
+
+/* 拟声词 */
+.a-burst{
+  position:absolute;top:-7.4cqw;right:1.6cqw;z-index:6;
+  font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:7.6cqw;line-height:1;
+  color:#fff;background:var(--red);padding:1.6cqw 2.6cqw;
+  border:2.5px solid var(--ink);border-radius:1.4cqw;
+  transform:rotate(-8deg);box-shadow:1.8cqw 1.8cqw 0 var(--ink);
+}
+.a-burst.ok{background:var(--green)}
+
+/* A · 讲解 */
+.a-note{
+  border:2.2px solid var(--ink);border-radius:2cqw;background:#FFF6D8;
+  padding:3cqw 3.2cqw;position:relative;
+}
+.a-note .who{
+  position:absolute;top:-2.6cqw;left:2.6cqw;background:var(--ink);color:var(--yellow);
+  font-size:2.6cqw;padding:.4cqw 1.6cqw;border-radius:.8cqw;letter-spacing:.06em;
+}
+.a-note p{margin:1.4cqw 0 0;font-size:3.4cqw;line-height:1.62}
+.a-tagline{display:flex;gap:1.4cqw;flex-wrap:wrap;margin-top:2.4cqw}
+.a-tagline span{
+  font-size:2.6cqw;border:1.6px solid var(--ink);border-radius:999px;padding:.5cqw 1.8cqw;background:#fff;
+}
+
+/* ============================================================
+   方案 B ·「草稿本」练习纸
+   ============================================================ */
+.skin-b{
+  --paper:#FBF4E1; --line:#AFC8E4; --pen:#E4443A; --inkb:#22354F; --pencil:#8D8776;
+  --highlight:#FFE873;
+  border:1px solid #D9D0B8;
+  box-shadow:0 18px 40px -18px rgba(60,50,30,.45), 0 2px 0 #D9D0B8;
+  border-radius:18px;
+  background:var(--paper);
+}
+.skin-b .scr{
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(5.4cqw - 1px), rgba(175,200,228,.55) calc(5.4cqw - 1px), rgba(175,200,228,.55) 5.4cqw);
+  background-position:0 8cqw;
+  color:var(--inkb);
+  font-family:"KaiTi","STKaiti","Kaiti SC","Noto Sans SC",serif;
+}
+.skin-b .scr::before{
+  content:"";position:absolute;top:0;bottom:0;left:7.6cqw;width:1px;
+  background:rgba(228,68,58,.35);
+}
+.skin-b .statusbar{font-family:"Noto Sans SC",sans-serif;color:#5A5449}
+.skin-b .capsule{background:rgba(255,255,255,.55);border-color:rgba(34,53,79,.18)}
+.skin-b .capsule span,.skin-b .capsule .ring{color:#41506A;border-color:#41506A}
+
+.b-hand{font-family:"KaiTi","STKaiti",serif}
+.b-hello{font-size:3.6cqw;color:#6B6252;letter-spacing:.08em;margin:0}
+.b-title{font-family:"KaiTi","STKaiti",serif;font-size:8.8cqw;line-height:1.2;margin:1cqw 0 0;color:var(--inkb)}
+.b-underline{
+  display:inline-block;position:relative;z-index:1;
+}
+.b-underline::after{
+  content:"";position:absolute;left:-.6cqw;right:-.6cqw;bottom:.6cqw;height:2.6cqw;
+  background:var(--highlight);z-index:-1;transform:rotate(-1.2deg);
+}
+.b-write{
+  border-bottom:2px solid #CBBFA2;padding:2cqw .6cqw 2.4cqw;font-size:3.9cqw;color:#4A4234;
+  display:flex;align-items:center;gap:1.4cqw;
+}
+.b-write .ph{color:#B4A98E}
+.b-write .caret{width:1.6px;height:4.6cqw;background:var(--inkb);animation:blink 1.05s steps(1) infinite}
+.b-hint{font-size:2.7cqw;color:#9A9078;margin:1.4cqw 0 0;text-align:right}
+
+.b-sec{display:flex;align-items:center;gap:1.6cqw;font-size:3.2cqw;color:#6B6252;letter-spacing:.1em}
+.b-sec::after{content:"";flex:1;height:1px;margin-left:2.4cqw;background:repeating-linear-gradient(to right,#C9BC9E 0 4px,transparent 4px 8px)}
+
+.b-item{
+  display:flex;align-items:center;gap:2.4cqw;padding:2.2cqw 0;
+  border-bottom:1px dashed #D2C6A9;font-size:3.5cqw;color:#35302A;
+}
+.b-item .no{
+  width:5.6cqw;height:5.6cqw;border-radius:50%;border:1.6px solid #C08A7E;
+  color:#B4604F;display:flex;align-items:center;justify-content:center;font-size:2.9cqw;flex:0 0 auto;
+}
+.b-item .arrow{margin-left:auto;color:#B5A98C;font-size:3.4cqw}
+
+.b-cta{
+  display:flex;align-items:center;justify-content:center;gap:2cqw;
+  padding:3.6cqw;border:2.4px solid var(--pen);border-radius:1.2cqw;color:var(--pen);
+  font-family:"KaiTi","STKaiti",serif;font-size:4.6cqw;letter-spacing:.14em;background:#FFF9EC;
+  box-shadow:0 0 0 1px rgba(228,68,58,.12);
+}
+.b-cta::after{content:"→";font-family:"Noto Sans SC",sans-serif;font-size:4cqw}
+.b-spin{transform:rotate(-1.4deg)}
+
+.b-note-strip{
+  margin-top:2.6cqw;font-size:2.9cqw;color:#8A7F66;transform:rotate(-1.6deg);
+  display:flex;align-items:center;gap:1.4cqw;
+}
+.b-note-strip::before{content:"✎";font-size:3.4cqw;color:var(--pen)}
+
+.b-tape{
+  position:absolute;width:14cqw;height:5.4cqw;background:rgba(255,226,140,.72);
+  border-left:1px dashed rgba(180,150,60,.5);border-right:1px dashed rgba(180,150,60,.5);
+  transform:rotate(-4deg);
+}
+
+/* B · 试卷头 */
+.b-paperhead{border-bottom:2.5px solid #2E2A24;padding-bottom:1.8cqw;display:flex;align-items:flex-end;justify-content:space-between}
+.b-paperhead .t{font-family:"KaiTi","STKaiti",serif;font-size:4.6cqw;color:#2E2A24;letter-spacing:.06em}
+.b-paperhead .meta{font-size:2.5cqw;color:#8A7F66;text-align:right;line-height:1.5}
+.b-qno{display:flex;align-items:baseline;gap:1.8cqw;margin:3cqw 0 1.6cqw}
+.b-qno .n{font-family:"KaiTi","STKaiti",serif;font-size:7.6cqw;color:#B4604F;line-height:1}
+.b-qno .k{font-size:2.7cqw;color:#8A7F66;letter-spacing:.12em}
+.b-stem{font-size:4.1cqw;line-height:1.62;color:#2E2A24;margin:0 0 2.6cqw;font-family:"KaiTi","STKaiti",serif}
+.b-opt{
+  display:flex;gap:2.4cqw;align-items:flex-start;padding:3.2cqw 1.4cqw;
+  font-size:3.6cqw;color:#3A342C;position:relative;
+}
+.b-opt .key{
+  flex:0 0 auto;width:5.4cqw;height:5.4cqw;border-radius:50%;border:1.5px solid #B9AC90;
+  display:flex;align-items:center;justify-content:center;font-size:2.9cqw;color:#6B6252;
+  font-family:"Noto Sans SC",sans-serif;
+}
+.b-opt.pick .key{border-color:var(--pen);border-width:2px}
+.b-opt.pick .key::after{
+  content:"✓";color:var(--pen);font-size:3.2cqw;
+}
+.b-opt.pick .key span{display:none}
+.b-opt.right .key{border-color:#2C8A5C;background:#E7F4EA;color:#2C8A5C}
+.b-opt.wrong .key{border-color:var(--pen);background:#FBEAE6;color:var(--pen)}
+.b-opt.dim{opacity:.5}
+
+.b-score{
+  position:absolute;right:1cqw;top:-2cqw;font-family:"KaiTi","STKaiti",serif;
+  font-size:9cqw;color:var(--pen);transform:rotate(-12deg);opacity:.92;line-height:1;
+}
+.b-redline{position:relative;display:inline-block}
+.b-redline::after{
+  content:"";position:absolute;left:-2%;right:-2%;top:48%;height:2px;
+  background:var(--pen);border-radius:2px;transform:rotate(-1deg);opacity:.85;
+}
+.b-sticky{
+  background:#FFFDF2;border:1px solid #E0D4B4;border-radius:1cqw;
+  padding:3cqw 3.2cqw;position:relative;
+  box-shadow:1.6cqw 1.6cqw 0 rgba(180,164,126,.22);
+}
+.b-sticky .h{
+  font-family:"KaiTi","STKaiti",serif;font-size:3.8cqw;color:var(--pen);
+  display:flex;align-items:center;gap:1.4cqw;margin-bottom:1.4cqw;
+}
+.b-sticky .h::after{content:"";flex:1;height:1px;background:#E8DCC0}
+.b-sticky p{margin:0;font-size:3.3cqw;line-height:1.68;color:#4A443A}
+.b-hl{background:linear-gradient(transparent 58%, var(--highlight) 58%);padding:0 .3cqw}
+
+/* ============================================================
+   方案 C ·「闯关」潮漫 3D
+   ============================================================ */
+.skin-c{
+  --inkc:#12131A; --blue:#2F6BE4; --blue-d:#1B47A8; --yellow:#FFD23F;
+  --green:#3BC46A; --green-d:#228548; --red:#FF5A4E; --red-d:#C2312A;
+  --grape:#7B5BF5;
+  border:3px solid var(--inkc);
+  box-shadow:0 12px 0 -2px var(--inkc), 0 24px 46px -18px rgba(18,19,26,.5);
+  border-radius:34px;
+  background:#fff;
+}
+.skin-c .scr{background:#fff;color:var(--inkc);font-size:3.9cqw}
+.skin-c .statusbar{color:var(--inkc)}
+.skin-c .capsule{background:#fff;border-color:rgba(18,19,26,.22)}
+.skin-c .capsule span,.skin-c .capsule .ring{color:var(--inkc);border-color:var(--inkc)}
+
+.c-hud{display:flex;align-items:center;justify-content:space-between;gap:2cqw}
+.c-pill{
+  display:inline-flex;align-items:center;gap:1.2cqw;padding:1.1cqw 2.4cqw;border-radius:999px;
+  border:2.4px solid var(--inkc);background:#fff;font-size:2.9cqw;font-weight:800;
+  box-shadow:0 1cqw 0 var(--inkc);
+}
+.c-pill.y{background:var(--yellow)}
+.c-pill.b{background:#E8F0FF;border-color:var(--blue);color:var(--blue-d);box-shadow:0 1cqw 0 var(--blue)}
+
+.c-hero{font-family:"Noto Sans SC",sans-serif;font-weight:900;font-size:9.6cqw;line-height:1.12;margin:0;letter-spacing:-.02em}
+.c-hero .u{
+  background:var(--yellow);padding:0 1.2cqw;border-radius:1.2cqw;
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
+}
+.c-hero-sub{font-size:3.5cqw;color:#5B5F6E;margin:2cqw 0 0;line-height:1.55}
+
+.c-input{
+  border:3px solid var(--inkc);border-radius:4.4cqw;background:#fff;
+  padding:3.6cqw 3.4cqw;box-shadow:0 2.2cqw 0 var(--inkc);
+  min-height:22cqw;display:flex;flex-direction:column;justify-content:space-between;
+}
+.c-input .txt{font-size:4.1cqw;line-height:1.5;color:var(--inkc)}
+.c-input .ph{color:#A4A8B6}
+.c-input .row{display:flex;align-items:center;justify-content:space-between;margin-top:2cqw}
+.c-input .tools{display:flex;gap:1.6cqw}
+.c-input .tool{
+  width:8.4cqw;height:8.4cqw;border-radius:2.4cqw;border:2.2px solid var(--inkc);
+  display:flex;align-items:center;justify-content:center;font-size:4cqw;background:#F3F4F8;
+}
+.c-input .count{font-size:2.6cqw;color:#9AA0AE}
+
+.c-chips{display:flex;gap:1.8cqw;flex-wrap:wrap}
+.c-chip{
+  font-size:3cqw;font-weight:700;padding:1.5cqw 2.8cqw;border-radius:999px;
+  border:2.2px solid var(--inkc);background:#fff;box-shadow:0 .9cqw 0 var(--inkc);
+}
+.c-chip:nth-child(1){background:#FFF0C2}
+
+.c-cta{
+  display:flex;align-items:center;justify-content:center;gap:2cqw;width:100%;
+  padding:4cqw;border-radius:3.2cqw;border:3px solid var(--inkc);
+  background:var(--blue);color:#fff;font-weight:900;font-size:4.8cqw;letter-spacing:.02em;
+  box-shadow:0 2.6cqw 0 var(--blue-d);
+}
+.c-cta:active{transform:translateY(1.4cqw);box-shadow:0 1cqw 0 var(--blue-d)}
+.c-cta.alt{background:var(--yellow);color:var(--inkc);box-shadow:0 2.6cqw 0 #C99A00}
+
+.c-card{
+  border:3px solid var(--inkc);border-radius:3.4cqw;background:#fff;padding:3.2cqw;
+  box-shadow:0 1.8cqw 0 rgba(18,19,26,.9);
+}
+.c-card.soft{box-shadow:none;background:#F6F7FB;border-color:rgba(18,19,26,.14)}
+
+.c-progress{display:flex;gap:1cqw;align-items:center}
+.c-progress i{flex:1;height:2.6cqw;border-radius:999px;background:#E7E9F0;display:block}
+.c-progress i.on{background:var(--blue)}
+.c-progress i.ok{background:var(--green)}
+
+.c-stem{font-weight:900;font-size:4.9cqw;line-height:1.42;margin:0}
+.c-opt{
+  display:flex;align-items:center;gap:2.6cqw;padding:3.1cqw 3cqw;border-radius:3cqw;
+  border:2.6px solid #DDE0EA;background:#fff;font-size:3.8cqw;line-height:1.4;
+  box-shadow:0 1.2cqw 0 #EDEFF5;
+}
+.c-opt .key{
+  flex:0 0 auto;width:7cqw;height:7cqw;border-radius:2cqw;border:2.4px solid #C9CEDC;
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:3.4cqw;color:#8B90A0;
+}
+.c-opt.pick{border-color:var(--blue);background:#EEF4FF;box-shadow:0 1.2cqw 0 #C7D9FF}
+.c-opt.pick .key{background:var(--blue);border-color:var(--blue);color:#fff}
+.c-opt.right{border-color:var(--green);background:#EAFBF0;box-shadow:0 1.2cqw 0 #B4E8C7}
+.c-opt.right .key{background:var(--green);border-color:var(--green);color:#fff}
+.c-opt.wrong{border-color:var(--red);background:#FFF1EF;box-shadow:0 1.2cqw 0 #FFC6C0}
+.c-opt.wrong .key{background:var(--red);border-color:var(--red);color:#fff}
+
+/* C · 反馈 */
+.c-flash{
+  display:flex;align-items:center;gap:2.6cqw;padding:3cqw 3.4cqw;border-radius:3.2cqw;
+  border:3px solid var(--green-d);background:var(--green);color:#fff;
+  box-shadow:0 2cqw 0 var(--green-d);
+}
+.c-flash .big{font-family:"ZCOOL QingKe HuangYou",sans-serif;font-size:6.4cqw;line-height:1}
+.c-flash .sub{font-size:2.8cqw;opacity:.9}
+.c-flash .stamp{
+  margin-left:auto;width:11cqw;height:11cqw;border-radius:50%;border:3px solid #fff;
+  display:flex;align-items:center;justify-content:center;font-size:5.4cqw;
+  background:rgba(255,255,255,.18);transform:rotate(8deg);
+}
+.c-sheet{
+  border-radius:5cqw 5cqw 0 0;border:3px solid var(--inkc);border-bottom:0;background:#fff;
+  padding:2.4cqw 3.6cqw 4.8cqw;box-shadow:0 -2cqw 0 rgba(18,19,26,.08);
+}
+.c-sheet .grab{width:11cqw;height:1.2cqw;border-radius:999px;background:#D9DCE6;margin:0 auto 2.6cqw}
+.c-sheet .h{display:flex;align-items:center;gap:1.6cqw;font-weight:900;font-size:3.8cqw;margin-bottom:1.6cqw}
+.c-sheet .h .ai{
+  font-size:2.4cqw;font-weight:800;padding:.5cqw 1.4cqw;border-radius:.9cqw;
+  background:var(--grape);color:#fff;letter-spacing:.06em;
+}
+.c-sheet p{margin:0;font-size:3.3cqw;line-height:1.66;color:#43475A}
+.c-tags{display:flex;gap:1.4cqw;flex-wrap:wrap;margin-top:2.2cqw}
+.c-tags span{
+  font-size:2.6cqw;font-weight:700;color:#4B4F60;background:#F1F2F7;
+  border-radius:.9cqw;padding:.6cqw 1.6cqw;
+}
+.c-sticker{
+  position:absolute;font-family:"ZCOOL QingKe HuangYou",sans-serif;
+  background:var(--yellow);border:2.6px solid var(--inkc);border-radius:1.6cqw;
+  padding:1cqw 2cqw;font-size:4cqw;transform:rotate(-9deg);
+  box-shadow:1.4cqw 1.4cqw 0 var(--inkc);z-index:7;
+}
+
+/* ============================================================
+   调研 / 地图 / 页脚
+   ============================================================ */
+.table-wrap{overflow-x:auto;border:1px solid var(--hair);border-radius:14px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:13px}
+th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--hair);vertical-align:top}
+th{font-size:11.5px;letter-spacing:.1em;color:var(--muted);font-weight:600;background:rgba(26,24,32,.03)}
+tr:last-child td{border-bottom:0}
+td b{font-weight:700}
+td.ok{color:#186B41}
+td.no{color:#9C3529}
+
+.map-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.map-card{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:20px}
+.map-card h4{margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px}
+.map-card .file{
+  font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:11px;color:var(--muted);
+  margin:0 0 12px;word-break:break-all;
+}
+.map-card ol{margin:0;padding-left:18px;font-size:13px;color:#464152;line-height:1.9}
+.map-card .badge{
+  margin-left:auto;font-size:10.5px;letter-spacing:.08em;background:rgba(26,24,32,.06);
+  border-radius:5px;padding:2px 7px;color:#4A4557;font-weight:600;
+}
+
+.callout{
+  border:1px solid var(--hair);border-left:4px solid var(--ink);border-radius:12px;
+  background:var(--card);padding:18px 22px;font-size:13.5px;color:#403B4E;margin-top:22px;
+}
+.callout b{color:var(--ink)}
+footer{padding:44px 0 70px;border-top:1px solid var(--hair);margin-top:20px;font-size:12.5px;color:var(--muted)}
+footer .wrap>p{margin:0 0 8px;max-width:80ch}
+</style>
+</head>
+<body>
+
+<header class="board-head">
+  <div class="wrap">
+    <p class="kicker">鱼皮 AI 闯关学习小程序 · 原型阶段 0</p>
+    <h1>UI 风格候选板 v0.1</h1>
+    <p class="sub">
+      从《阿衰》的漫画气质出发，我把它拆成三件可落地的东西：<b>分镜感、纸张感、批改感</b>。
+      下面三个方向用<strong>同一套核心三屏</strong>（首页 / 答题 / 答对反馈）做对照，方便你直接比出"味道"。
+    </p>
+    <ul class="meta-list">
+      <li>画布 <b>9 : 17.4</b> 竖屏 · 模拟微信小程序</li>
+      <li>排列 <b>一行三列</b> · 980px / 640px 断点降级</li>
+      <li>本期只做<b>风格确认</b>，不做业务页面</li>
+      <li>字体：站酷快乐体 / 庆科黄油体 / 楷体兜底</li>
+    </ul>
+  </div>
+</header>
+
+<nav class="jump">
+  <div class="wrap">
+    <a href="#ref">① 同类产品调研结论</a>
+    <a href="#dir-a">② 方案 A 漫格</a>
+    <a href="#dir-b">③ 方案 B 草稿本</a>
+    <a href="#dir-c">④ 方案 C 闯关</a>
+    <a href="#compare">⑤ 对比与推荐</a>
+    <a href="#map">⑥ 页面地图与文件拆分</a>
+  </div>
+</nav>
+
+<!-- ============ 0. 三方向导语 ============ -->
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>一句话定位</h2>
+      <p>三个方向都不是"可爱贴纸风"，而是把漫画的<em>叙事结构</em>搬进界面：分镜 = 信息层级，拟声词 = 状态反馈，红笔 = 批改与鼓励。</p>
+    </div>
+    <div class="intro-grid">
+      <article class="intro-card">
+        <span class="no">A</span>
+        <h3>漫格 · 油墨四格</h3>
+        <p class="one-liner">最像《阿衰》。粗黑描边 + 网点纸 + 硬投影，界面就是一本四格漫画。</p>
+        <div class="sw">
+          <i style="background:#FFC93C"></i><i style="background:#2F6BE4"></i>
+          <i style="background:#FF4B3E"></i><i style="background:#17151A"></i>
+          <i style="background:#FFFCF0"></i>
+        </div>
+        <div class="tags"><span>个性最强</span><span>记忆点高</span><span>密集信息需克制</span></div>
+      </article>
+      <article class="intro-card">
+        <span class="no">B</span>
+        <h3>草稿本 · 练习纸</h3>
+        <p class="one-liner">最像"学习"本身。横线本 + 红笔批注 + 荧光笔，安静但极有代入感。</p>
+        <div class="sw">
+          <i style="background:#FBF4E1"></i><i style="background:#AFC8E4"></i>
+          <i style="background:#E4443A"></i><i style="background:#FFE873"></i>
+          <i style="background:#22354F"></i>
+        </div>
+        <div class="tags"><span>耐看</span><span>报告/海报强</span><span>游戏感偏弱</span></div>
+      </article>
+      <article class="intro-card">
+        <span class="no">C</span>
+        <h3>闯关 · 潮漫 3D</h3>
+        <p class="one-liner">最像主流闯关 App。厚描边 + 实体按压按钮 + 高饱和，转化率最稳。</p>
+        <div class="sw">
+          <i style="background:#FFD23F"></i><i style="background:#2F6BE4"></i>
+          <i style="background:#3BC46A"></i><i style="background:#FF5A4E"></i>
+          <i style="background:#12131A"></i>
+        </div>
+        <div class="tags"><span>手感最好</span><span>上手零成本</span><span>略常见</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 1. 调研 ============ -->
+<section id="ref">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>同类产品在用什么视觉语言</h2>
+      <p>我把回答类 / 学习类产品分成四类"血缘"。结论先放这里：<b>答题产品的形态已经高度同质化（白底卡片 + 高饱和强调色），差异化只能从"叙事方式"上找。</b></p>
+    </div>
+    <hr class="rule">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:15%">产品</th>
+            <th style="width:26%">视觉语言</th>
+            <th style="width:30%">值得借的</th>
+            <th style="width:29%">不该借的</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Duolingo</b><br><span class="t-cap">游戏化学习标杆</span></td>
+            <td>亮绿 #58CC02 主色、圆头字形、按钮底部 4px 实色"厚度"、关卡路径地图、连胜火焰与宝石</td>
+            <td class="ok">按钮的物理按压手感；答对瞬间的强反馈；把"坚持"做成可视化资产</td>
+            <td class="no">重吉祥物依赖；欧美卡通脸与中文学习语境有距离</td>
+          </tr>
+          <tr>
+            <td><b>Kahoot!</b><br><span class="t-cap">课堂抢答</span></td>
+            <td>紫 #46178F 底 + 四色答案块（红黄蓝绿 × 形状 ▲◆●■）、超大字号、几乎无装饰</td>
+            <td class="ok">颜色 + 形状双重编码（色弱友好）；选项本身就是界面主角</td>
+            <td class="no">为投屏/多人场景设计，单手竖屏会很空旷</td>
+          </tr>
+          <tr>
+            <td><b>Quizizz / Wayground</b><br><span class="t-cap">学生自测</span></td>
+            <td>紫 #8854C0、卡片流、头像与表情贴纸、梗图化表达</td>
+            <td class="ok">用"梗"降低挫败感；头像/昵称让单人做题不孤单</td>
+            <td class="no">贴纸滥用会显得廉价，且不利于沉淀"知识档案"的专业感</td>
+          </tr>
+          <tr>
+            <td><b>百词斩 / 扇贝</b><br><span class="t-cap">中文记忆类</span></td>
+            <td>一图一义、插画 + 白底、橙蓝点缀、进度天梯</td>
+            <td class="ok">用图像承担记忆锚点；每日任务的心智极轻</td>
+            <td class="no">纯文本 MVP 阶段无法照搬"一题一图"，需用排版补足画面感</td>
+          </tr>
+          <tr>
+            <td><b>猿题库 / 粉笔</b><br><span class="t-cap">中文应试答题</span></td>
+            <td>白底大留白、A/B/C/D 圆角序号块、红绿判题、解析折叠</td>
+            <td class="ok">中国用户已经训练出来的答题器范式，学习成本几乎为零；解析折叠控页长</td>
+            <td class="no">过于"应试"，会把"闯关"的趣味稀释成"刷题"</td>
+          </tr>
+          <tr>
+            <td><b>微信读书</b><br><span class="t-cap">阅读类</span></td>
+            <td>米黄纸色、衬线正文、极简细线、大面积留白</td>
+            <td class="ok">"纸"的底色能压住花哨，让长文本（AI 讲解）舒服</td>
+            <td class="no">缺少即时反馈的爽感，需要叠加游戏化层</td>
+          </tr>
+          <tr>
+            <td><b>小红书知识卡片</b><br><span class="t-cap">分享裂变</span></td>
+            <td>奶油底 + 手写标题 + 胶带/贴纸/边框、竖版 3:4 封面</td>
+            <td class="ok">海报的"手作感"是分享率的关键，机器感越强越没人转</td>
+            <td class="no">信息密度低，不适合承载报告数据</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <b>空位在哪：</b>大家要么"像游戏"（Duolingo / Kahoot），要么"像试卷"（猿题库 / 粉笔），
+      要么"像笔记"（微信读书）。<b>没有人把「漫画分镜」当成信息结构来用</b>——
+      题目是一格、讲解是旁白框、对错是拟声词与红笔批改。这正是《阿衰》能给我们的、别人抄不走的差异点。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. 方案 A ============ -->
+<section id="dir-a" class="dir">
+  <div class="wrap">
+    <div class="dir-head">
+      <div>
+        <span class="tag"><b>方案 A</b> · 油墨四格</span>
+        <h2>「漫格」— 界面就是一本四格漫画</h2>
+        <p>黑白墨线做骨架，三原色做情绪。所有卡片都有粗描边和硬投影，像贴在本子上的漫画剪贴。翻页进度做成"第 N 格"，答对答错用拟声词盖章。</p>
+      </div>
+      <div class="verdict"><b>适合</b>想让人一眼记住、愿意截图分享的产品。风险是信息密集页（报告、错题本）需要降噪。</div>
+    </div>
+
+    <div class="spec">
+      <div class="panel">
+        <h4>色板</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#FFC93C"></i><b>衰黄</b><code>#FFC93C</code></div>
+          <div class="sw"><i style="background:#2F6BE4"></i><b>校服蓝</b><code>#2F6BE4</code></div>
+          <div class="sw"><i style="background:#FF4B3E"></i><b>批改红</b><code>#FF4B3E</code></div>
+          <div class="sw"><i style="background:#17151A"></i><b>油墨黑</b><code>#17151A</code></div>
+          <div class="sw"><i style="background:#FFFCF0"></i><b>纸白</b><code>#FFFCF0</code></div>
+          <div class="sw"><i style="background:#2FA96B"></i><b>通过绿</b><code>#2FA96B</code></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>字阶</h4>
+        <div class="type-spec">
+          <div><small>标题 / 站酷快乐体</small><div class="t-h1" style="font-family:'ZCOOL KuaiLe',sans-serif">万物皆可闯关</div></div>
+          <div><small>题干 / 快乐体 22px</small><div class="t-h2" style="font-family:'ZCOOL KuaiLe',sans-serif">RAG 最核心的作用是？</div></div>
+          <div><small>正文 / 思源黑 14px</small><div class="t-body">检索到的资料先变成"证据"，再交给模型组织答案。</div></div>
+          <div><small>标注 / 10.5px</small><div class="t-cap">Q2 · 单选 · 难度中</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>组件手感</h4>
+        <div class="demo-row" style="margin-bottom:16px">
+          <span style="display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border:2.5px solid #17151A;border-radius:10px;background:#FFC93C;box-shadow:3px 3px 0 #17151A;font-family:'ZCOOL KuaiLe',sans-serif;font-size:15px">开闯！</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border:2.5px solid #17151A;border-radius:10px;background:#2F6BE4;color:#fff;box-shadow:3px 3px 0 #17151A;font-family:'ZCOOL KuaiLe',sans-serif;font-size:15px">下一格 →</span>
+          <span style="display:inline-flex;align-items:center;padding:6px 12px;border:2px solid #17151A;border-radius:999px;background:#fff;font-size:12px;box-shadow:2px 2px 0 #17151A">贴纸 chip</span>
+        </div>
+        <ul class="points">
+          <li>描边 2.5px 起，圆角只给 10–14px，避免"圆滚滚婴儿感"</li>
+          <li>投影一律硬投影（0 blur），模拟印刷套色偏差</li>
+          <li>背景铺 45° 网点，密度 ≤ 6%</li>
+          <li>拟声词是状态色的唯一载体：叮 / 啪 / 哇</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phones">
+
+      <!-- A-1 首页 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>① 首页 · 开题</b><em>输入即分镜第一格</em></p>
+        <div class="phone skin-a">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding-top:2.4cqw">
+                <div class="a-logo"><span class="stamp">衰</span>鱼皮闯关</div>
+              </div>
+
+              <div style="margin-top:6cqw">
+                <p class="a-sub" style="margin-bottom:1.4cqw;letter-spacing:.14em">第 0 格 · 你想学点啥？</p>
+                <h3 class="a-title">万物<br>皆可闯关<span style="color:#FF4B3E">！</span></h3>
+              </div>
+
+              <div class="a-panel" style="margin-top:5cqw">
+                <span class="corner">输入</span>
+                <div class="a-input">
+                  <span class="a-ph">比如：什么是 RAG？它和普通搜索有啥区别<span class="cursor" style="background:#17151A"></span></span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:2cqw;flex-wrap:wrap;margin-top:4.4cqw">
+                <span class="a-chip">RAG 入门</span>
+                <span class="a-chip">二叉树遍历</span>
+                <span class="a-chip">光合作用</span>
+              </div>
+              <div class="a-panel" style="margin-top:5.6cqw;padding:3.6cqw 3.2cqw 3cqw">
+                <span class="corner">今日任务</span>
+                <div style="display:flex;flex-direction:column;gap:3cqw;margin-top:2.2cqw">
+                  <div style="display:flex;align-items:center;gap:2.2cqw;font-size:3.1cqw">
+                    <span style="flex:0 0 auto;width:5.6cqw;height:5.6cqw;border:2px solid #17151A;border-radius:.9cqw;background:#2FA96B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:2.5cqw">✓</span>
+                    <span>每日一闯</span>
+                    <span style="margin-left:auto;font-family:'ZCOOL QingKe HuangYou';font-size:3cqw">+40 XP</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:2.2cqw;font-size:3.1cqw">
+                    <span style="flex:0 0 auto;width:5.6cqw;height:5.6cqw;border:2px solid #17151A;border-radius:.9cqw;background:#fff"></span>
+                    <span>复习 2 个易错点</span>
+                    <span style="margin-left:auto;font-family:'ZCOOL QingKe HuangYou';font-size:3cqw;color:#FF4B3E">进行中</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:2.2cqw;font-size:3.1cqw">
+                    <span style="flex:0 0 auto;width:5.6cqw;height:5.6cqw;border:2px solid #17151A;border-radius:.9cqw;background:#fff"></span>
+                    <span>连续闯关 7 天</span>
+                    <span style="margin-left:auto;font-family:'ZCOOL QingKe HuangYou';font-size:3cqw;color:#8A8494">3 / 7</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:2cqw;margin-top:3.8cqw;padding-top:2.8cqw;border-top:2px dashed rgba(23,21,26,.32);font-size:2.9cqw;color:#5A5464">
+                <span>上次：RAG 入门</span>
+                <span style="margin-left:auto;background:#17151A;color:#FFFCF0;padding:.4cqw 1.6cqw;border-radius:.8cqw;font-size:2.5cqw">通关 100%</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-top:5cqw">
+                <div class="a-btn">开 闯<span style="font-family:'Noto Sans SC';font-weight:900">!</span></div>
+              </div>
+
+              <div class="a-xp" style="margin-top:5.4cqw">
+                <span class="a-streak"><span class="flame">🔥</span>连胜 3 天</span>
+                <span style="display:flex;align-items:center;gap:1cqw"><span class="coin">XP</span>1,240</span>
+                <span style="display:flex;align-items:center;gap:1cqw"><span class="coin" style="background:#fff">¢</span>86</span>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- A-2 答题 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>② 闯关答题</b><em>一格一题，格位即进度</em></p>
+        <div class="phone skin-a">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div class="a-topbar" style="padding-top:3cqw">
+                <div class="a-cells">
+                  <i class="done"></i><i class="now"></i><i></i><i></i><i></i>
+                </div>
+                <span class="a-chip" style="font-size:2.7cqw;padding:.8cqw 2cqw">＋XP 24</span>
+              </div>
+              <div class="a-metaline"><span>第 <b>2</b> 格 / 共 5 格</span><span>还剩 <b>4</b> 题</span></div>
+
+              <div class="a-panel" style="margin-top:4cqw;padding:3.4cqw 3.2cqw">
+                <span class="corner">Q2 · 单选</span>
+                <p class="a-stem">RAG 里那个 <span style="background:#FFC93C;padding:0 .4cqw">R</span>（Retrieval）主要在做什么？</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:2.6cqw;margin-top:4.6cqw">
+                <div class="a-opt pick">
+                  <span class="key">A</span>
+                  <span class="txt">先把相关资料检索出来，再喂给模型</span>
+                </div>
+                <div class="a-opt">
+                  <span class="key">B</span>
+                  <span class="txt">重新训练一遍模型让它背下新知识</span>
+                </div>
+                <div class="a-opt">
+                  <span class="key">C</span>
+                  <span class="txt">把用户问题翻译成关键词</span>
+                </div>
+                <div class="a-opt">
+                  <span class="key">D</span>
+                  <span class="txt">对模型输出做一遍语法检查</span>
+                </div>
+              </div>
+
+              <div style="margin-top:3.6cqw;border:2px dashed rgba(23,21,26,.42);border-radius:1.6cqw;padding:2.8cqw 3cqw;font-size:2.9cqw;color:#5A5464;display:flex;gap:2cqw;line-height:1.5">
+                <span style="flex:0 0 auto;font-family:'ZCOOL QingKe HuangYou';color:#FF4B3E;font-size:3.2cqw">提示</span>
+                <span>R / A / G 三个字母分别代表什么？先拆开想。</span>
+              </div>
+              <div style="text-align:center;margin-top:3cqw;font-size:2.7cqw;color:#8A8494;text-decoration:underline">先跳过这题</div>
+
+              <div class="sp"></div>
+              <div style="margin-top:5cqw">
+                <div class="a-btn solid">就选它</div>
+              </div>
+              <p style="font-size:2.7cqw;color:#6C6675;text-align:center;margin-top:2.4cqw">单选题点选项即判定，不用再点按钮</p>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- A-3 反馈 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>③ 即时反馈</b><em>拟声词 + 红笔 + 旁白框</em></p>
+        <div class="phone skin-a">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="padding-top:2.6cqw;display:flex;align-items:center;gap:2.6cqw">
+                <span class="a-burst ok" style="position:static;font-size:6.6cqw;padding:1.1cqw 2.4cqw;transform:rotate(-7deg)">叮！</span>
+                <span style="font-family:'ZCOOL KuaiLe';font-size:3.6cqw">第 2 格 · 判定</span>
+                <span class="a-chip" style="margin-left:auto;font-size:2.7cqw;padding:.8cqw 2cqw;background:#E6F7EC">＋12 XP</span>
+              </div>
+
+              <div class="a-panel" style="margin-top:5.6cqw;padding:3.4cqw 3.2cqw">
+                <p class="a-stem" style="font-size:4.2cqw">RAG 里那个 R（Retrieval）主要在做什么？</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:2.2cqw;margin-top:3.4cqw">
+                <div class="a-opt right">
+                  <span class="key">A</span>
+                  <span class="txt">先把相关资料检索出来，再喂给模型</span>
+                  <span class="a-mark">✓</span>
+                </div>
+                <div class="a-opt" style="opacity:.55">
+                  <span class="key">B</span>
+                  <span class="txt">重新训练一遍模型让它背下新知识</span>
+                </div>
+                <div class="a-opt" style="opacity:.45">
+                  <span class="key">C</span>
+                  <span class="txt">把用户问题翻译成关键词</span>
+                </div>
+                <div class="a-opt" style="opacity:.45">
+                  <span class="key">D</span>
+                  <span class="txt">对模型输出做一遍语法检查</span>
+                </div>
+              </div>
+
+              <div class="a-note" style="margin-top:4.6cqw">
+                <span class="who">AI 教练说</span>
+                <p>
+                  RAG 就像<b>开卷考试</b>：模型不背书，先翻书找到相关段落（Retrieval），
+                  再结合问题作答（Generation）。所以它记得新，但不会"长记性"。
+                </p>
+                <div class="a-tagline">
+                  <span># 检索增强</span><span># 开卷考试类比</span>
+                </div>
+              </div>
+
+              <div style="margin-top:3.6cqw;border:2.5px solid #17151A;background:#FFC93C;border-radius:1.6cqw;padding:2.8cqw 3cqw;display:flex;align-items:center;gap:2.2cqw;box-shadow:1.6cqw 1.6cqw 0 #17151A">
+                <span style="flex:0 0 auto;font-family:'ZCOOL QingKe HuangYou';font-size:4.4cqw;line-height:1">记住</span>
+                <span style="font-size:3.2cqw;line-height:1.4">RAG = 先查资料，再回答。</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-top:4.4cqw">
+                <div class="a-btn">下一格 →</div>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. 方案 B ============ -->
+<section id="dir-b" class="dir">
+  <div class="wrap">
+    <div class="dir-head">
+      <div>
+        <span class="tag"><b>方案 B</b> · 草稿本</span>
+        <h2>「草稿本」— 在练习纸上闯关</h2>
+        <p>横线本做底，红笔做批改，荧光笔做重点。题目像试卷，讲解像老师写在便签上的批注。这套方案的"爽点"不在色块，而在<b>被认真对待</b>的感觉。</p>
+      </div>
+      <div class="verdict"><b>适合</b>报告页、错题本、分享海报——这三处用它几乎是降维打击。风险是首屏冲击力弱于 A / C。</div>
+    </div>
+
+    <div class="spec">
+      <div class="panel">
+        <h4>色板</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#FBF4E1"></i><b>纸黄</b><code>#FBF4E1</code></div>
+          <div class="sw"><i style="background:#AFC8E4"></i><b>格线蓝</b><code>#AFC8E4</code></div>
+          <div class="sw"><i style="background:#E4443A"></i><b>红笔</b><code>#E4443A</code></div>
+          <div class="sw"><i style="background:#FFE873"></i><b>荧光黄</b><code>#FFE873</code></div>
+          <div class="sw"><i style="background:#22354F"></i><b>墨蓝</b><code>#22354F</code></div>
+          <div class="sw"><i style="background:#8D8776"></i><b>铅笔灰</b><code>#8D8776</code></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>字阶</h4>
+        <div class="type-spec">
+          <div><small>标题 / 楷体 · 手写感</small><div class="t-h1" style="font-family:'KaiTi','STKaiti',serif;color:#22354F">今天学点什么？</div></div>
+          <div><small>题干 / 楷体 18px</small><div class="t-h2" style="font-family:'KaiTi','STKaiti',serif;color:#22354F">RAG 的 R 在做什么？</div></div>
+          <div><small>正文 / 思源黑 13.5px</small><div class="t-body">像开卷考试：先翻书，再作答。</div></div>
+          <div><small>批注 / 红笔 11.5px</small><div class="t-cap" style="color:#E4443A;font-family:'KaiTi',serif;font-size:13px">这题容易错，圈一下 →</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>组件手感</h4>
+        <div class="demo-row" style="margin-bottom:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border:2.4px solid #E4443A;border-radius:6px;color:#E4443A;background:#FFF9EC;font-family:'KaiTi',serif;font-size:15px;letter-spacing:.12em">出题 →</span>
+          <span style="display:inline-block;padding:6px 10px;background:#FFE873;font-family:'KaiTi',serif;font-size:13px;color:#3A342C;transform:rotate(-1deg)">圈重点</span>
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1.5px solid #C08A7E;border-radius:50%;color:#B4604F;font-size:12px">✓</span>
+        </div>
+        <ul class="points">
+          <li>格线 24px 一行，正文严格落在格线上（line-height 对齐）</li>
+          <li>红笔元素必须轻微旋转 −1°~−4°，避免"机器画的线"</li>
+          <li>荧光笔只做底 42% 高，不做整行高亮</li>
+          <li>不用纯白背景，纸黄是灵魂</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phones">
+
+      <!-- B-1 首页 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>① 首页 · 开题</b><em>填空式输入，像写作业</em></p>
+        <div class="phone skin-b">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad" style="padding-left:9.6cqw">
+              <div style="padding-top:3cqw;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:'KaiTi',serif;font-size:3.2cqw;color:#6B6252;letter-spacing:.1em">10 月 25 日 · 周六</span>
+                <span style="font-family:'KaiTi',serif;font-size:3.2cqw;color:#B4604F">连胜 3 天</span>
+              </div>
+
+              <p class="b-hello" style="margin-top:5cqw">晚上好，同学</p>
+              <h3 class="b-title">今天想<br><span class="b-underline">学点什么</span>？</h3>
+
+              <div style="margin-top:5.4cqw">
+                <div class="b-write">
+                  <span class="b-hand" style="font-size:3.4cqw;color:#9A9078">题目：</span>
+                  <span class="ph b-hand">一句话 / 一段话 / 一个链接</span>
+                  <span class="caret"></span>
+                </div>
+                <p class="b-hint">↑ 写不下也没关系，AI 会帮你补全</p>
+              </div>
+
+              <div class="b-sec" style="margin-top:4.6cqw">上次没看完的</div>
+              <div style="margin-top:1.6cqw">
+                <div class="b-item">
+                  <span class="no">1</span>
+                  <span>RAG 与向量检索 · 还剩 2 题</span>
+                  <span class="arrow">›</span>
+                </div>
+                <div class="b-item">
+                  <span class="no">2</span>
+                  <span>HTTP 三次握手 · 87% 掌握</span>
+                  <span class="arrow">›</span>
+                </div>
+                <div class="b-item">
+                  <span class="no">3</span>
+                  <span>TCP 与 UDP 的区别 · 新</span>
+                  <span class="arrow">›</span>
+                </div>
+
+                <div class="b-sec" style="margin-top:3.8cqw">本周</div>
+                <div style="display:flex;gap:3.4cqw;margin-top:2.4cqw;font-family:'KaiTi','STKaiti',serif">
+                  <div style="flex:1"><div style="font-size:6.4cqw;color:#B4604F;line-height:1.05">12</div><div style="font-size:2.5cqw;color:#8A7F66;letter-spacing:.1em">答题</div></div>
+                  <div style="flex:1"><div style="font-size:6.4cqw;color:#B4604F;line-height:1.05">78<span style="font-size:3.4cqw">%</span></div><div style="font-size:2.5cqw;color:#8A7F66;letter-spacing:.1em">正确率</div></div>
+                  <div style="flex:1"><div style="font-size:6.4cqw;color:#B4604F;line-height:1.05">4</div><div style="font-size:2.5cqw;color:#8A7F66;letter-spacing:.1em">关卡</div></div>
+                </div>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-top:5.6cqw" class="b-spin">
+                <div class="b-cta">出 题</div>
+              </div>
+
+              <div class="b-note-strip">别怕错，错了才记得住</div>
+            </div>
+            <div class="tabbar" style="color:#6B6252">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B-2 答题 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>② 闯关答题</b><em>试卷头 + 圈选式选项</em></p>
+        <div class="phone skin-b">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad" style="padding-left:9.6cqw;padding-right:5cqw">
+              <div class="b-paperhead" style="margin-top:3.4cqw">
+                <span class="t">RAG 入门 · 第 2 题</span>
+                <span class="meta">单选题<br>共 5 题 / 3 分</span>
+              </div>
+              <div style="display:flex;gap:3cqw;margin-top:2.2cqw;font-size:2.7cqw;color:#8A7F66;border-bottom:1px dashed #C9BC9E;padding-bottom:1.8cqw">
+                <span>姓名<span style="display:inline-block;width:9cqw;border-bottom:1px solid #C9BC9E;margin-left:1cqw"></span></span>
+                <span>日期<span style="display:inline-block;width:9cqw;border-bottom:1px solid #C9BC9E;margin-left:1cqw"></span></span>
+                <span style="margin-left:auto;color:#B4604F">得分</span>
+                <span style="display:inline-block;width:7cqw;border-bottom:1px solid #C9BC9E"></span>
+              </div>
+
+              <div class="b-qno">
+                <span class="n">2</span>
+                <span class="k">RAG 里那个 R（Retrieval）主要在做什么？</span>
+              </div>
+
+              <div class="b-opt pick">
+                <span class="key"><span>A</span></span>
+                <span>先把相关资料检索出来，再喂给模型</span>
+              </div>
+              <div class="b-opt">
+                <span class="key"><span>B</span></span>
+                <span>重新训练一遍模型让它背下新知识</span>
+              </div>
+              <div class="b-opt">
+                <span class="key"><span>C</span></span>
+                <span>把用户的问题翻译成搜索关键词</span>
+              </div>
+              <div class="b-opt">
+                <span class="key"><span>D</span></span>
+                <span>对模型输出做一遍语法检查</span>
+              </div>
+
+              <div style="display:flex;gap:1.6cqw;flex-wrap:wrap;margin-top:2.6cqw">
+                <span style="font-size:2.5cqw;border:1px dashed #C9BC9E;border-radius:999px;padding:.6cqw 1.8cqw;color:#8A7F66"># 检索增强</span>
+                <span style="font-size:2.5cqw;border:1px dashed #C9BC9E;border-radius:999px;padding:.6cqw 1.8cqw;color:#8A7F66"># 向量库</span>
+                <span style="font-size:2.5cqw;border:1px dashed #C9BC9E;border-radius:999px;padding:.6cqw 1.8cqw;color:#8A7F66"># 大模型幻觉</span>
+              </div>
+
+              <div class="b-sec" style="margin-top:4.8cqw">答题卡</div>
+              <div style="display:flex;gap:2.2cqw;margin-top:2.2cqw">
+                <span style="width:7.4cqw;height:7.4cqw;border:1.6px solid #C08A7E;border-radius:1.2cqw;display:flex;align-items:center;justify-content:center;color:#2C8A5C;font-size:3.2cqw">✓</span>
+                <span style="width:7.4cqw;height:7.4cqw;border:2px solid #E4443A;border-radius:1.2cqw;display:flex;align-items:center;justify-content:center;color:#E4443A;font-size:3cqw">2</span>
+                <span style="width:7.4cqw;height:7.4cqw;border:1.5px dashed #C9BC9E;border-radius:1.2cqw;display:flex;align-items:center;justify-content:center;color:#A2967C;font-size:3cqw">3</span>
+                <span style="width:7.4cqw;height:7.4cqw;border:1.5px dashed #C9BC9E;border-radius:1.2cqw;display:flex;align-items:center;justify-content:center;color:#A2967C;font-size:3cqw">4</span>
+                <span style="width:7.4cqw;height:7.4cqw;border:1.5px dashed #C9BC9E;border-radius:1.2cqw;display:flex;align-items:center;justify-content:center;color:#A2967C;font-size:3cqw">5</span>
+              </div>
+              <div style="margin-top:3.2cqw;font-size:2.9cqw;color:#8A7F66;display:flex;gap:1.6cqw;align-items:flex-start">
+                <span style="color:#E4443A;flex:0 0 auto">✎</span><span>先拆开 R / A / G 三个字母，再看选项</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-top:5.6cqw">
+                <div class="b-cta">下一题</div>
+              </div>
+
+              <div class="b-note-strip" style="margin-top:2.4cqw">题干里的 R 是关键词，别被 B 选项带跑</div>
+            </div>
+            <div class="tabbar" style="color:#6B6252">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B-3 反馈 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>③ 即时反馈</b><em>红勾 + 便签批注</em></p>
+        <div class="phone skin-b">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad" style="padding-left:9.6cqw;padding-right:5cqw">
+              <div class="b-paperhead" style="margin-top:3.4cqw">
+                <span class="t">RAG 入门 · 第 2 题</span>
+                <span class="meta" style="color:#B4604F">✓ 回答正确</span>
+              </div>
+
+              <div style="position:relative;margin-top:2.4cqw">
+                <span class="b-score">+12</span>
+                <div class="b-qno" style="margin-top:1.6cqw">
+                  <span class="n">2</span>
+                  <span class="k">RAG 里那个 R（Retrieval）主要在做什么？</span>
+                </div>
+              </div>
+
+              <div class="b-opt right">
+                <span class="key"><span style="color:#2C8A5C">✓</span></span>
+                <span>先把相关资料检索出来，<span class="b-hl">再喂给模型</span></span>
+              </div>
+              <div class="b-opt dim">
+                <span class="key"><span>B</span></span>
+                <span>重新训练一遍模型让它背下新知识</span>
+              </div>
+
+              <div class="b-sticky" style="margin-top:4cqw">
+                <div class="h">批 注</div>
+                <p>
+                  像<b>开卷考试</b>：模型不背书，先翻书找段落（Retrieval），
+                  再结合问题作答（Generation）。<br>
+                  记住这句：<span class="b-hl">RAG 会查资料，但不会长记性。</span>
+                </p>
+              </div>
+
+              <div class="b-sec" style="margin-top:4.4cqw">举一反三</div>
+              <div style="margin-top:1.4cqw">
+                <div class="b-item">
+                  <span class="no">Q</span>
+                  <span>RAG 和微调（Fine-tuning）怎么选？</span>
+                  <span class="arrow">›</span>
+                </div>
+                <div class="b-item">
+                  <span class="no">Q</span>
+                  <span>向量数据库在 RAG 里管什么？</span>
+                  <span class="arrow">›</span>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:3cqw;align-items:center;margin-top:4cqw">
+                <div style="flex:1;font-size:2.9cqw;color:#8A7F66">本关掌握度</div>
+                <div style="flex:1.4;height:2.2cqw;background:#E8DFC8;border-radius:999px;overflow:hidden">
+                  <i style="display:block;width:72%;height:100%;background:#2C8A5C"></i>
+                </div>
+                <div style="font-family:'KaiTi',serif;font-size:3.4cqw;color:#2C8A5C">72%</div>
+              </div>
+
+              <div style="margin-top:3.4cqw;border:1.6px dashed #C08A7E;border-radius:1cqw;padding:2.6cqw;text-align:center;font-family:'KaiTi',serif;font-size:3.4cqw;color:#B4604F;letter-spacing:.12em">＋ 加入错题本</div>
+
+              <div class="sp"></div>
+              <div style="margin-top:3.4cqw">
+                <div class="b-cta">下一题</div>
+              </div>
+            </div>
+            <div class="tabbar" style="color:#6B6252">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. 方案 C ============ -->
+<section id="dir-c" class="dir">
+  <div class="wrap">
+    <div class="dir-head">
+      <div>
+        <span class="tag"><b>方案 C</b> · 潮漫 3D</span>
+        <h2>「闯关」— 厚描边 + 实体按压</h2>
+        <p>把漫画的粗描边翻译成"厚边 + 实色底影"，让每个按钮都像可以按下去的塑料积木。高饱和黄蓝做主色，反馈用整块绿色闪屏 + 底部抽屉装讲解。</p>
+      </div>
+      <div class="verdict"><b>适合</b>追求留存与转化的产品化版本，手感最成熟。风险是与 Duolingo / Kahoot 的气质重叠，缺少"阿衰"的中国校园味。</div>
+    </div>
+
+    <div class="spec">
+      <div class="panel">
+        <h4>色板</h4>
+        <div class="swatches">
+          <div class="sw"><i style="background:#FFD23F"></i><b>闯关黄</b><code>#FFD23F</code></div>
+          <div class="sw"><i style="background:#2F6BE4"></i><b>主蓝</b><code>#2F6BE4</code></div>
+          <div class="sw"><i style="background:#3BC46A"></i><b>答对绿</b><code>#3BC46A</code></div>
+          <div class="sw"><i style="background:#FF5A4E"></i><b>答错红</b><code>#FF5A4E</code></div>
+          <div class="sw"><i style="background:#7B5BF5"></i><b>AI 紫</b><code>#7B5BF5</code></div>
+          <div class="sw"><i style="background:#12131A"></i><b>描边黑</b><code>#12131A</code></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>字阶</h4>
+        <div class="type-spec">
+          <div><small>标题 / 900 字重</small><div class="t-h1" style="font-weight:900;letter-spacing:-.02em">万物皆可闯关</div></div>
+          <div><small>题干 / 900 18px</small><div class="t-h2" style="font-weight:900">RAG 的 R 在做什么？</div></div>
+          <div><small>正文 / 400 13.5px</small><div class="t-body">检索到的资料先变成证据，再交给模型组织答案。</div></div>
+          <div><small>HUD / 800 11.5px</small><div class="t-cap" style="font-weight:800;color:#12131A">＋12 XP · 连对 3</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>组件手感</h4>
+        <div class="demo-row" style="margin-bottom:16px">
+          <span style="display:inline-flex;align-items:center;padding:10px 18px;border:3px solid #12131A;border-radius:12px;background:#2F6BE4;color:#fff;font-weight:900;font-size:14px;box-shadow:0 4px 0 #1B47A8">生成闯关</span>
+          <span style="display:inline-flex;align-items:center;padding:10px 16px;border:3px solid #12131A;border-radius:12px;background:#FFD23F;color:#12131A;font-weight:900;font-size:14px;box-shadow:0 4px 0 #C99A00">＋12 XP</span>
+          <span style="display:inline-flex;align-items:center;padding:6px 12px;border:2.2px solid #12131A;border-radius:999px;background:#fff;font-size:12px;font-weight:700;box-shadow:0 3px 0 #12131A">🔥 3 天</span>
+        </div>
+        <ul class="points">
+          <li>底影 = 主色加深 30%，高度 6px，按下时位移 4px</li>
+          <li>圆角 20–30px（比 A 软），描边统一 3px</li>
+          <li>选项未选时用灰边灰影，选中才染色，避免"满屏花"</li>
+          <li>说明文字全部放进底部抽屉，保证题干永远在第一屏</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phones">
+
+      <!-- C-1 首页 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>① 首页 · 开题</b><em>大标题 + 巨型输入卡</em></p>
+        <div class="phone skin-c">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div class="c-hud" style="padding-top:2.6cqw">
+                <span class="c-pill y">🔥 3 天</span>
+                <span class="c-pill">XP 1,240</span>
+                <span class="c-pill b"><i style="display:inline-block;width:3.4cqw;height:3.4cqw;border-radius:50%;border:2px solid #1B47A8"></i>86</span>
+              </div>
+
+              <div style="margin-top:6.4cqw">
+                <h3 class="c-hero">万物<span class="u">皆可</span><br>闯关</h3>
+                <p class="c-hero-sub">输入一句话、一段文字或一个链接，<br>AI 30 秒给你出一套能玩的题。</p>
+              </div>
+
+              <div class="c-input" style="margin-top:5cqw">
+                <span class="txt ph">今天想搞懂什么？<br>比如「什么是 RAG」</span>
+                <div class="row">
+                  <div class="tools">
+                    <span class="tool"><svg viewBox="0 0 24 24" style="width:4.4cqw;height:4.4cqw;fill:none;stroke:#12131A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
+                    <span class="tool"><svg viewBox="0 0 24 24" style="width:4.4cqw;height:4.4cqw;fill:none;stroke:#12131A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M10.2 13.8a4 4 0 0 0 5.6 0l2.6-2.6a4 4 0 0 0-5.6-5.6l-1.2 1.2"/><path d="M13.8 10.2a4 4 0 0 0-5.6 0l-2.6 2.6a4 4 0 0 0 5.6 5.6l1.2-1.2"/></svg></span>
+                    <span class="tool"><svg viewBox="0 0 24 24" style="width:4.4cqw;height:4.4cqw;fill:none;stroke:#12131A;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="9" y="2.6" width="6" height="11" rx="3"/><path d="M5.4 11a6.6 6.6 0 0 0 13.2 0"/><path d="M12 17.6V21"/></svg></span>
+                  </div>
+                  <span class="count">0 / 2000</span>
+                </div>
+              </div>
+
+              <div class="c-chips" style="margin-top:4.4cqw">
+                <span class="c-chip">RAG 入门</span>
+                <span class="c-chip">二叉树</span>
+                <span class="c-chip">光合作用</span>
+              </div>
+
+              <div style="display:flex;gap:2.2cqw;margin-top:4.6cqw">
+                <div class="c-card" style="flex:1;padding:2.6cqw 2.2cqw;text-align:center;box-shadow:0 1.2cqw 0 rgba(18,19,26,.85)">
+                  <div style="font-size:2.4cqw;color:#7A7F90;font-weight:800">今日</div>
+                  <div style="font-size:4.4cqw;font-weight:900;margin-top:.4cqw;line-height:1.1">3<span style="font-size:2.4cqw;color:#9AA0AE">/5</span></div>
+                </div>
+                <div class="c-card" style="flex:1;padding:2.6cqw 2.2cqw;text-align:center;box-shadow:0 1.2cqw 0 rgba(18,19,26,.85)">
+                  <div style="font-size:2.4cqw;color:#7A7F90;font-weight:800">正确率</div>
+                  <div style="font-size:4.4cqw;font-weight:900;margin-top:.4cqw;line-height:1.1">88<span style="font-size:2.4cqw;color:#9AA0AE">%</span></div>
+                </div>
+                <div class="c-card" style="flex:1;padding:2.6cqw 2.2cqw;text-align:center;box-shadow:0 1.2cqw 0 rgba(18,19,26,.85)">
+                  <div style="font-size:2.4cqw;color:#7A7F90;font-weight:800">连对</div>
+                  <div style="font-size:4.4cqw;font-weight:900;margin-top:.4cqw;line-height:1.1">3</div>
+                </div>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-top:5.4cqw">
+                <div class="c-cta">生成闯关 ⚡</div>
+              </div>
+
+              <div class="c-card soft" style="margin-top:4.6cqw;display:flex;align-items:center;gap:2.6cqw">
+                <span style="width:9cqw;height:9cqw;border-radius:2.6cqw;background:#E8F0FF;border:2.4px solid #2F6BE4;display:flex;align-items:center;justify-content:center;font-size:4cqw">↩</span>
+                <div style="flex:1">
+                  <div style="font-size:3cqw;font-weight:800">继续上次</div>
+                  <div style="font-size:2.6cqw;color:#7A7F90;margin-top:.4cqw">RAG 与向量检索 · 还剩 2 题</div>
+                </div>
+                <span style="font-size:4cqw;color:#9AA0AE">›</span>
+              </div>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C-2 答题 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>② 闯关答题</b><em>分段进度 + 中性选项</em></p>
+        <div class="phone skin-c">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div style="padding-top:3cqw;display:flex;align-items:center;gap:2.4cqw">
+                <span style="font-size:3cqw;font-weight:900">2/5</span>
+                <div class="c-progress" style="flex:1">
+                  <i class="ok"></i><i class="on"></i><i></i><i></i><i></i>
+                </div>
+                <span class="c-pill y" style="font-size:2.5cqw;padding:.7cqw 1.8cqw;box-shadow:0 .7cqw 0 #12131A">＋24</span>
+              </div>
+
+              <div class="c-card" style="margin-top:4.4cqw">
+                <div style="display:flex;align-items:center;gap:1.4cqw;font-size:2.5cqw;font-weight:800;color:#7A7F90;margin-bottom:1.8cqw">
+                  <span style="background:#EEF4FF;color:#2F6BE4;border-radius:.8cqw;padding:.5cqw 1.4cqw">单选</span>
+                  <span>难度 中</span>
+                  <span style="margin-left:auto">RAG 基础</span>
+                </div>
+                <p class="c-stem">RAG 里那个 R（Retrieval）主要在做什么？</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:2.2cqw;margin-top:3.4cqw">
+                <div class="c-opt pick"><span class="key">A</span><span>先把相关资料检索出来，再喂给模型</span></div>
+                <div class="c-opt"><span class="key">B</span><span>重新训练一遍模型让它背下新知识</span></div>
+                <div class="c-opt"><span class="key">C</span><span>把用户的问题翻译成搜索关键词</span></div>
+                <div class="c-opt"><span class="key">D</span><span>对模型输出做一遍语法检查</span></div>
+              </div>
+
+              <div class="c-card soft" style="margin-top:3.4cqw;padding:2.8cqw 3cqw;display:flex;gap:2cqw;align-items:flex-start">
+                <span style="flex:0 0 auto;font-size:2.4cqw;font-weight:800;background:#FFF0C2;border-radius:.8cqw;padding:.5cqw 1.4cqw">提示</span>
+                <span style="font-size:3cqw;color:#5B5F6E;line-height:1.5">三个字母分别代表什么？先拆开想。</span>
+              </div>
+
+              <div class="sp"></div>
+              <div style="margin-top:4.6cqw">
+                <div class="c-cta">确认答案</div>
+              </div>
+              <p style="text-align:center;font-size:2.5cqw;color:#9AA0AE;margin-top:2.4cqw">选完可改，确认后才判定</p>
+            </div>
+            <div class="tabbar">
+              <div class="on"><svg viewBox="0 0 24 24"><path d="M3.5 10.6 12 3.6l8.5 7"/><path d="M6 9.4V20h12V9.4"/></svg>闯关</div>
+              <div><svg viewBox="0 0 24 24"><path d="M4 5.6A2.6 2.6 0 0 1 6.6 3H20v18H6.6A2.6 2.6 0 0 1 4 18.4z"/><path d="M4 18.4c0-1.4 1.2-2.6 2.6-2.6H20"/></svg>档案</div>
+              <div><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20c1.1-3.9 3.9-5.9 7.2-5.9s6.1 2 7.2 5.9"/></svg>我的</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C-3 反馈 -->
+      <div class="phone-col">
+        <p class="phone-cap"><b>③ 即时反馈</b><em>整块绿闪 + 底部抽屉</em></p>
+        <div class="phone skin-c">
+          <div class="scr">
+            <div class="statusbar"><span>9:41</span><span class="icons"><span class="sig"><i></i><i></i><i></i><i></i></span><span class="bat"><i></i></span></span></div>
+            <div class="capsule"><span>⋯</span><span class="ring"></span></div>
+            <div class="body pad">
+              <div class="c-flash" style="margin-top:3cqw">
+                <div>
+                  <div class="big">答对啦！</div>
+                  <div class="sub">＋12 XP · 连对 3 题</div>
+                </div>
+                <span class="stamp">★</span>
+              </div>
+
+              <div class="c-card" style="margin-top:3.4cqw;box-shadow:none;border-color:#E3E5EE;background:#FAFBFE">
+                <p class="c-stem" style="font-size:3.9cqw">RAG 里那个 R（Retrieval）主要在做什么？</p>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:2cqw;margin-top:2.8cqw">
+                <div class="c-opt right" style="padding:2.4cqw 2.6cqw">
+                  <span class="key">A</span><span>先把相关资料检索出来，再喂给模型</span>
+                </div>
+                <div class="c-opt" style="padding:2.4cqw 2.6cqw;opacity:.5;box-shadow:none">
+                  <span class="key">B</span><span>重新训练一遍模型让它背下新知识</span>
+                </div>
+                <div class="c-opt" style="padding:2.2cqw 2.6cqw;opacity:.45;box-shadow:none">
+                  <span class="key">C</span><span>把用户的问题翻译成搜索关键词</span>
+                </div>
+                <div class="c-opt" style="padding:2.2cqw 2.6cqw;opacity:.45;box-shadow:none">
+                  <span class="key">D</span><span>对模型输出做一遍语法检查</span>
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:2.4cqw;margin-top:3cqw;font-size:2.7cqw;color:#7A7F90;font-weight:700">
+                <span>用时 12s</span>
+                <span style="width:1px;height:3cqw;background:#DDE0EA"></span>
+                <span>本题 +12 XP</span>
+                <span style="margin-left:auto;color:#228548">连对 3 题</span>
+              </div>
+
+              <div class="sp"></div>
+              <div class="c-sheet" style="margin-top:3.4cqw">
+                <div class="grab"></div>
+                <div class="h"><span class="ai">AI 讲解</span>开卷考试，不是重新背书</div>
+                <p>
+                  模型不背书，先翻书找到相关段落（Retrieval），再结合问题作答（Generation）。
+                  <b>所以 RAG 记得新，但不会"长记性"。</b>
+                </p>
+                <div class="c-tags"><span># 检索增强</span><span># 开卷考试类比</span></div>
+
+                <div style="display:flex;align-items:center;gap:2cqw;margin-top:2.6cqw;font-size:2.7cqw;color:#7A7F90;font-weight:800">
+                  <span>知识点掌握度</span>
+                  <span style="flex:1;height:2.4cqw;border-radius:999px;background:#E7E9F0;overflow:hidden"><i style="display:block;width:72%;height:100%;background:#3BC46A"></i></span>
+                  <span style="color:#228548">72%</span>
+                </div>
+                <div style="margin-top:2.8cqw"><div class="c-cta alt" style="padding:2.8cqw;font-size:4cqw">下一题 →</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. 对比 ============ -->
+<section id="compare">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>横向对比</h2>
+      <p>按"这个产品真正需要什么"来打分，而不是按好看程度。</p>
+    </div>
+    <hr class="rule">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">维度</th>
+            <th style="width:26%">A 漫格</th>
+            <th style="width:26%">B 草稿本</th>
+            <th style="width:26%">C 闯关</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><b>《阿衰》意境还原度</b></td><td class="ok">★★★★★</td><td>★★★☆☆</td><td>★★☆☆☆</td></tr>
+          <tr><td><b>首屏冲击力 / 打开就想点</b></td><td>★★★★☆</td><td>★★★☆☆</td><td class="ok">★★★★★</td></tr>
+          <tr><td><b>长文本阅读（AI 讲解）</b></td><td>★★★☆☆</td><td class="ok">★★★★★</td><td>★★★★☆</td></tr>
+          <tr><td><b>信息密集型页面（报告/档案）</b></td><td>★★☆☆☆</td><td class="ok">★★★★★</td><td>★★★★☆</td></tr>
+          <tr><td><b>游戏化手感（XP/连击/判题）</b></td><td>★★★★☆</td><td>★★☆☆☆</td><td class="ok">★★★★★</td></tr>
+          <tr><td><b>分享海报的出片率</b></td><td class="ok">★★★★★</td><td class="ok">★★★★★</td><td>★★★★☆</td></tr>
+          <tr><td><b>设计实现成本（CSS 复杂度）</b></td><td>中（描边/网点/硬影需统一 token）</td><td>低（几乎纯排版）</td><td>低（组件化最好复用）</td></tr>
+          <tr><td><b>被判"像某产品"的风险</b></td><td class="ok">低</td><td class="ok">低</td><td class="no">高（Duolingo/Kahoot）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout" style="border-left-color:#E4443A">
+      <b>我的推荐：A 当骨架，B 做纸底，C 借手感 —— 一个"混血"方案。</b><br>
+      具体分工：<br>
+      · <b>首页 / 闯关页 / 反馈</b> → 用 A：分镜格 + 拟声词 + 红笔，个性最强，是记忆点所在；<br>
+      · <b>底色与长文本</b> → 掺 B：纸黄底 + 楷体批注，压住 A 在长文页的躁；<br>
+      · <b>按钮与 XP/进度</b> → 掺 C：3px 厚描边 + 实色底影 + 按下位移，手感统一且开发最省；<br>
+      · <b>报告 / 海报</b> → 全用 B：试卷批改 + 单行本封面，天然适合晒朋友圈。<br>
+      这样既不会像"又一个 Duolingo"，也不会因为过度漫画化而牺牲可读性。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. 页面地图 ============ -->
+<section id="map">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>页面地图 &amp; 文件拆分</h2>
+      <p>按"一次看完一条完整故事线"的原则分文件，每个文件一行三列、卡片式排列、随屏宽降为 2 列 / 1 列。</p>
+    </div>
+    <hr class="rule">
+    <div class="map-grid">
+      <div class="map-card">
+        <h4>01 核心闭环 <span class="badge">P0 · 必做</span></h4>
+        <p class="file">prototype/01-核心闭环.html</p>
+        <ol>
+          <li>首页 · 空态</li>
+          <li>首页 · 输入完成</li>
+          <li>AI 生成中（联网检索 / 出题）</li>
+          <li>生成失败 · 重试</li>
+          <li>闯关 · 单选题</li>
+          <li>闯关 · 多选题（半选态）</li>
+          <li>闯关 · 判断题</li>
+          <li>答对反馈 / 答错反馈（含讲解）</li>
+          <li>关卡结算（本关 XP / 连击）</li>
+          <li>复盘报告</li>
+          <li>分享海报</li>
+        </ol>
+      </div>
+      <div class="map-card">
+        <h4>02 学习档案 <span class="badge">P1 · 留存</span></h4>
+        <p class="file">prototype/02-学习档案.html</p>
+        <ol>
+          <li>档案首页（本周概览）</li>
+          <li>掌握度雷达 / 知识点树</li>
+          <li>学习热力图</li>
+          <li>错题本列表</li>
+          <li>错题详情 + 艾宾浩斯复习提醒</li>
+          <li>历史报告列表</li>
+          <li>单份报告详情（深度版）</li>
+          <li>我的 · 账号与设置</li>
+        </ol>
+      </div>
+      <div class="map-card">
+        <h4>03 输入扩展 <span class="badge">P1 · 多源</span></h4>
+        <p class="file">prototype/03-输入扩展.html</p>
+        <ol>
+          <li>多格式输入面板（PDF/Word/网页/视频）</li>
+          <li>上传 · 解析进度</li>
+          <li>网页链接解析预览</li>
+          <li>视频解析（字幕提取）</li>
+          <li>私有知识库列表</li>
+          <li>知识库详情</li>
+          <li>新建知识库</li>
+          <li>文档上传与切片预览</li>
+        </ol>
+      </div>
+      <div class="map-card">
+        <h4>04 社交与商业化 <span class="badge">P2–P3</span></h4>
+        <p class="file">prototype/04-社交与付费.html</p>
+        <ol>
+          <li>排行榜（按知识领域）</li>
+          <li>好友 PK · 邀请</li>
+          <li>PK 对战实时页</li>
+          <li>PK 结果对比</li>
+          <li>成就徽章墙</li>
+          <li>VIP 权益页</li>
+          <li>支付确认</li>
+          <li>邀请有礼</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>需要你确认的几个点：</b><br>
+      1. <b>风格方向</b>：纯 A / 纯 B / 纯 C / 还是我推荐的 A+B+C 混血？<br>
+      2. <b>页面范围</b>：先只做 01 核心闭环（11 屏）验证，还是四个文件一次做全（35 屏）？<br>
+      3. <b>交互深度</b>：静态展示稿，还是带可点击跳转（点"开闯"真的能进答题页）？<br>
+      4. <b>品牌角色</b>：要不要一个原创吉祥物"衰仔"作为 AI 教练？这会让拟声词和贴纸有主人，但要额外设计 6–8 个表情。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><b>版权说明：</b>本方案只汲取《阿衰》的<em>漫画语言</em>（分镜、粗描边、网点、拟声词、红笔批改），<b>不使用其任何角色形象、分镜画面、字体或商标</b>。若要引入吉祥物，建议做原创角色。</p>
+    <p><b>字体说明：</b>原型使用站酷快乐体 / 站酷庆科黄油体（开源可商用）+ 系统楷体兜底。正式上线建议做字体子集化内嵌，首屏体积可压到 200KB 内。</p>
+    <p style="opacity:.7">v0.1 · 仅风格与结构，无业务逻辑 · 待人工确认后进入页面开发</p>
+  </div>
+</footer>
+
+</body>
+</html>
