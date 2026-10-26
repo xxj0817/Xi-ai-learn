@@ -1,0 +1,27 @@
+.progress-ring {
+  position: relative;
+  flex-shrink: 0;
+
+  &__image {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  &__inner {
+    position: absolute;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  &__content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

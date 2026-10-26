@@ -1,0 +1,43 @@
+.bank-page {
+  min-height: 100vh;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+
+  &__body {
+    padding: 8px 16px 0;
+  }
+}
+
+.bank-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border-radius: 18px;
+  border: 1px solid #f0e2d6;
+  background: $color-panel;
+
+  &__title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #7f6347;
+  }
+}
+
+.bank-title {
+  display: block;
+  @include display-font;
+  font-size: 26px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.bank-subtitle {
+  display: block;
+  margin: 8px 0 14px;
+  color: $color-muted;
+  font-size: 14px;
+  line-height: 1.65;
+}

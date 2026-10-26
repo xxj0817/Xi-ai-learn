@@ -1,0 +1,61 @@
+// 设计令牌：严格对齐 prototype/Copilot生成的原型图/03-design-system-board.html
+// 该文件通过 config/index.ts 的 sass.resource 注入到所有 SCSS，无需手动 @import
+
+$font-display: 'Plus Jakarta Sans', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+$font-body: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+
+$color-bg: #f6f4ef;
+$color-screen-top: #fffdfb;
+$color-screen-bottom: #fdf7f1;
+$color-panel: #fffdfb;
+$color-text: #1f2d37;
+$color-title: #2b3340;
+$color-muted: #6c7b87;
+$color-subtle: #8a98a5;
+$color-line: #ecdccc;
+$color-line-soft: #ede4da;
+
+$color-orange: #ff7a2f;
+$color-orange-deep: #df5f1f;
+$color-orange-soft: #fff1e6;
+$color-orange-card: #fff6ef;
+$color-orange-border: #f0d3bc;
+$color-orange-label: #8a5a37;
+
+$color-green: #2e9e71;
+$color-green-deep: #217f5b;
+$color-green-soft: #eff9f3;
+$color-green-border: #a8ddc3;
+
+$color-blue: #4e9fff;
+$color-blue-soft: #edf5ff;
+
+$color-red: #ff6f5d;
+$color-red-deep: #b64f40;
+$color-red-soft: #ffefec;
+$color-red-border: #ffc4bb;
+
+$shadow-card: 0 20px 55px rgba(44, 30, 9, 0.14);
+$shadow-button: 0 10px 20px rgba(255, 122, 47, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+$shadow-soft: 0 3px 10px rgba(233, 214, 197, 0.28);
+$shadow-ring: 0 8px 18px rgba(219, 148, 96, 0.18);
+
+$radius-card: 22px;
+$radius-panel: 16px;
+$radius-pill: 999px;
+
+@mixin display-font {
+  font-family: $font-display;
+}
+
+@mixin ellipsis($lines: 1) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  @if $lines == 1 {
+    white-space: nowrap;
+  } @else {
+    display: -webkit-box;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+  }
+}

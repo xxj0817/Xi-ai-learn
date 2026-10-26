@@ -21,6 +21,10 @@ __pycache__/
 venv/
 .env
 .env.*
+!.env.example
+.pytest_cache/
+.coverage
+htmlcov/
 
 # WeChat DevTools
 project.private.config.json

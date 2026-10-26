@@ -1,0 +1,93 @@
+.option-card {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid #e7d6c6;
+  border-radius: 16px;
+  color: #33424d;
+  background: #fffdfa;
+  box-shadow: 0 2px 0 rgba(216, 197, 179, 0.55);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  text-align: center;
+
+  &--multi {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  &--correct {
+    color: #29986d;
+    background: $color-green-soft;
+    border-color: #9fd8bd;
+  }
+
+  &--wrong {
+    color: $color-red-deep;
+    background: $color-red-soft;
+    border-color: $color-red-border;
+  }
+
+  &--selected {
+    color: #cb6227;
+    background: #fff7f0;
+    border-color: #f0c9ab;
+  }
+
+  &--muted {
+    color: #8a98a5;
+    opacity: 0.75;
+  }
+
+  &--locked {
+    pointer-events: none;
+  }
+
+  &--pressed {
+    opacity: 0.92;
+  }
+
+  &__tick {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #e7d6c6;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &--on {
+      border-color: #f0c9ab;
+      background: $color-orange-soft;
+    }
+  }
+
+  &__key {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $color-orange-soft;
+    border: 1px solid #f0d7c2;
+    color: #cb6326;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex: 1;
+    line-height: 1.5;
+  }
+}

@@ -1,0 +1,40 @@
+.tab-bar {
+  position: fixed;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  left: 12px;
+  z-index: 20;
+
+  &__inner {
+    border-radius: 18px;
+    border: 1px solid #eddccd;
+    padding: 7px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: #fffbf8;
+    box-shadow: 0 -6px 18px rgba(58, 38, 15, 0.05);
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 4px;
+    border-radius: 14px;
+    color: #9b7d60;
+    font-size: 11px;
+    font-weight: 700;
+
+    &--active {
+      background: $color-orange-soft;
+      color: $color-orange-deep;
+    }
+  }
+
+  &__label {
+    line-height: 1.2;
+  }
+}

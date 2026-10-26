@@ -1,0 +1,227 @@
+.quiz-page {
+  min-height: 100vh;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 154, 96, 0.2), transparent 30%),
+    linear-gradient(180deg, #fffdfa 0%, #fff6ef 100%);
+
+  &__body {
+    padding: 8px 16px 0;
+  }
+}
+
+.quiz-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+
+  &__close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__counter {
+    @include display-font;
+    font-size: 13px;
+    font-weight: 700;
+    color: #647380;
+  }
+}
+
+.quiz-progress {
+  margin: 6px 0 10px;
+
+  &__track {
+    height: 8px;
+    border-radius: $radius-pill;
+    overflow: hidden;
+    background: #f3e5d8;
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    border-radius: $radius-pill;
+    background: linear-gradient(90deg, #ff9f60, #ffd7b7);
+    transition: width 0.3s ease;
+  }
+
+  &__meta {
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: #647380;
+    font-size: 12px;
+  }
+}
+
+.quiz-title {
+  display: block;
+  margin: 14px 0 6px;
+  @include display-font;
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 800;
+  color: $color-title;
+}
+
+.quiz-options {
+  margin-top: 0;
+}
+
+.quiz-submit {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 16px;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(180deg, #ff944f, #ff6f27);
+  box-shadow: $shadow-button;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.result-tip {
+  margin-top: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  &__left {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__right {
+    text-align: right;
+  }
+
+  &--correct {
+    border: 1px solid $color-green-border;
+    background: $color-green-soft;
+    color: $color-green-deep;
+  }
+
+  &--wrong {
+    border: 1px solid $color-red-border;
+    background: $color-red-soft;
+    color: $color-red-deep;
+  }
+}
+
+.explain-box {
+  margin-top: 10px;
+  border-radius: 14px;
+  border: 1px solid #f0b98e;
+  background: #fff1e4;
+  padding: 11px;
+  color: #5b4331;
+  font-size: 14px;
+  line-height: 1.65;
+  box-shadow: 0 6px 14px rgba(207, 126, 61, 0.12);
+
+  &__label {
+    color: #bb571f;
+    font-weight: 800;
+  }
+}
+
+.quiz-actions {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  &__prev,
+  &__next {
+    height: 42px;
+    border-radius: $radius-pill;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.2;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__prev {
+    border: 1px solid #e5ddd4;
+    color: #6a7783;
+    background: #fff;
+
+    &--disabled {
+      opacity: 0.5;
+    }
+  }
+
+  &__next {
+    border: 1px solid #f0d9c6;
+    color: #cb6227;
+    background: #fff7f0;
+
+    &--disabled {
+      opacity: 0.45;
+    }
+  }
+}
+
+.loading-mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  background: rgba(43, 51, 64, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-card {
+  width: 220px;
+  padding: 22px 18px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: $shadow-card;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  &__text {
+    font-size: 13px;
+    color: $color-muted;
+    line-height: 1.6;
+    text-align: center;
+  }
+}
+
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid #ffe3d1;
+  border-top-color: $color-orange;
+  animation: loading-rotate 0.9s linear infinite;
+}
+
+@keyframes loading-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}

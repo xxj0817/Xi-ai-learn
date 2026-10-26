@@ -1,0 +1,51 @@
+.record-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px;
+  border-radius: 20px;
+  border: 1px solid $color-line-soft;
+  background: #fff;
+  margin-bottom: 10px;
+
+  &__avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff4ea;
+    border: 1px solid #f2ddcd;
+  }
+
+  &__avatar-image {
+    width: 36px;
+    height: 36px;
+  }
+
+  &__body {
+    min-width: 0;
+  }
+
+  &__name {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    @include ellipsis(1);
+  }
+
+  &__meta {
+    display: block;
+    margin-top: 4px;
+    color: $color-subtle;
+    font-size: 13px;
+  }
+
+  &__percent {
+    @include display-font;
+    font-size: 14px;
+    font-weight: 800;
+  }
+}

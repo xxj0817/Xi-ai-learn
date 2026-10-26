@@ -1,0 +1,42 @@
+.empty-state {
+  margin-top: 8px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  border: 1px dashed #f0cfae;
+  background: #fff8f1;
+  text-align: center;
+
+  &--compact {
+    padding: 14px;
+  }
+
+  &__title {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    color: #8a5a37;
+  }
+
+  &__desc {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #8d735a;
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 0 18px;
+    min-height: 36px;
+    border-radius: 12px;
+    background: $color-orange-soft;
+    border: 1px solid #f0dbc9;
+    color: #c5632a;
+    font-size: 13px;
+    font-weight: 800;
+  }
+}
