@@ -54,6 +54,29 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = Field(default=20, ge=1, le=1000)
 
+    # ===== MySQL =====
+    mysql_enabled: bool = True
+    mysql_host: str = "127.0.0.1"
+    mysql_port: int = Field(default=3306, ge=1, le=65535)
+    mysql_user: str = "root"
+    mysql_password: str = ""
+    mysql_database: str = "xi_ai_learn"
+    mysql_pool_min_size: int = Field(default=1, ge=0, le=50)
+    mysql_pool_max_size: int = Field(default=10, ge=1, le=100)
+    # 启动时自动建库建表（本地开发便利；生产建议关闭并手工执行 migrations）
+    mysql_auto_migrate: bool = True
+
+    # ===== JWT =====
+    jwt_secret: str = "change-me-in-env"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_days: int = Field(default=7, ge=1, le=365)
+
+    # ===== 微信小程序 =====
+    wechat_appid: str = ""
+    wechat_app_secret: str = ""
+    wechat_code2session_url: str = "https://api.weixin.qq.com/sns/jscode2session"
+    wechat_timeout_seconds: float = 5.0
+
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:10086",
@@ -61,12 +84,18 @@ class Settings(BaseSettings):
         ]
     )
 
+    @property
+    def wechat_login_configured(self) -> bool:
+        return bool(self.wechat_appid.strip() and self.wechat_app_secret.strip())
+
     @model_validator(mode="after")
     def validate_llm_settings(self) -> "Settings":
         if self.quiz_min_question_count > self.quiz_max_question_count:
             raise ValueError("quiz_min_question_count 不能大于 quiz_max_question_count")
         if self.llm_provider == "deepseek" and not self.deepseek_api_key.strip():
             raise ValueError("llm_provider=deepseek 时必须配置 DEEPSEEK_API_KEY")
+        if self.mysql_pool_min_size > self.mysql_pool_max_size:
+            raise ValueError("mysql_pool_min_size 不能大于 mysql_pool_max_size")
         return self
 
 

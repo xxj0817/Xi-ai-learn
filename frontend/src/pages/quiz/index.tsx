@@ -2,21 +2,24 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
 
-import CoinBadge from '@/components/CoinBadge'
+import XpBadge from '@/components/XpBadge'
 import Icon from '@/components/Icon'
 import OptionCard, { type OptionState } from '@/components/OptionCard'
 import StatusBarSpacer from '@/components/StatusBarSpacer'
 import { generateReport } from '@/services/api'
 import { useStudyStore } from '@/store/useStudyStore'
+import { useUserStore } from '@/store/useUserStore'
 import { correctAnswerLabel, isAnswerCorrect } from '@/utils/judge'
 
 import './index.scss'
+
+const XP_PER_CORRECT = 2
 
 export default function QuizPage() {
   const quiz = useStudyStore((state) => state.quiz)
   const currentIndex = useStudyStore((state) => state.currentIndex)
   const answers = useStudyStore((state) => state.answers)
-  const coins = useStudyStore((state) => state.coins)
+  const totalXp = useUserStore((state) => state.profile?.total_xp ?? 0)
   const submitAnswer = useStudyStore((state) => state.submitAnswer)
   const setIndex = useStudyStore((state) => state.setIndex)
   const completeQuiz = useStudyStore((state) => state.completeQuiz)
@@ -97,6 +100,8 @@ export default function QuizPage() {
         })
       })
       completeQuiz(report)
+      void useUserStore.getState().loadProfile()
+      void useUserStore.getState().loadHistory(1)
       Taro.redirectTo({ url: '/pages/report/index' })
     } catch (error) {
       const message = error instanceof Error ? error.message : '报告生成失败，请重试'
@@ -163,7 +168,7 @@ export default function QuizPage() {
           <Text className='quiz-nav__counter'>
             第 {safeIndex + 1} / {total} 题
           </Text>
-          <CoinBadge value={coins} />
+          <XpBadge value={totalXp} />
         </View>
 
         <View className='quiz-progress'>
@@ -210,7 +215,7 @@ export default function QuizPage() {
               <Text>{isCorrect ? '答对啦' : '答错了'}</Text>
             </View>
             <Text className='result-tip__right'>
-              {isCorrect ? '+10 金币' : `正确答案：${correctAnswerLabel(question)}`}
+              {isCorrect ? `+${XP_PER_CORRECT} XP` : `正确答案：${correctAnswerLabel(question)}`}
             </Text>
           </View>
         ) : null}
@@ -241,7 +246,7 @@ export default function QuizPage() {
             }
             onClick={handleNext}
           >
-            {isLast ? '完成闯关' : '继续 →'}
+            {isLast ? '生成报告' : '继续 →'}
           </Button>
         </View>
       </View>

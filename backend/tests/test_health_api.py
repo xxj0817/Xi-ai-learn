@@ -13,6 +13,7 @@ def test_health_returns_envelope(client: TestClient) -> None:
     assert body["data"]["status"] == "ok"
     assert body["data"]["provider"] == "mock"
     assert body["data"]["model"] == "deepseek-flash"
+    assert body["data"]["database"] == "disabled"
 
 
 def test_unknown_route_returns_json_envelope(client: TestClient) -> None:

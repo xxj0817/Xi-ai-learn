@@ -43,6 +43,7 @@ export interface Report {
   three_line_summary: string[]
   advice: string[]
   share_quote: string
+  xp_gained?: number
 }
 
 export interface QuizRecord {
@@ -52,7 +53,5 @@ export interface QuizRecord {
   status: 'in_progress' | 'completed'
   createdAt: number
   updatedAt: number
-  coinsEarned: number
-  xpEarned: number
   report?: Report
 }

@@ -1,17 +1,19 @@
 import { Button, Image, Text, Textarea, View } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useMemo, useState } from 'react'
 
-import CoinBadge from '@/components/CoinBadge'
 import Icon from '@/components/Icon'
 import ProgressRing from '@/components/ProgressRing'
 import StatusBarSpacer from '@/components/StatusBarSpacer'
 import TabBar from '@/components/TabBar'
+import XpBadge from '@/components/XpBadge'
 import { generateQuiz } from '@/services/api'
 import { useStudyStore } from '@/store/useStudyStore'
+import { useUserStore } from '@/store/useUserStore'
 import type { QuizRecord } from '@/types/quiz'
+import type { QuizHistoryItem } from '@/types/user'
 import { levelAvatarSvg, mascotSvg } from '@/utils/icons'
-import { answeredCount, quizKeywords } from '@/utils/judge'
+import { answeredCount } from '@/utils/judge'
 import { svgToDataUri } from '@/utils/svg'
 
 import './index.scss'
@@ -24,20 +26,21 @@ export default function IndexPage() {
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const nickname = useStudyStore((state) => state.nickname)
-  const coins = useStudyStore((state) => state.coins)
-  const history = useStudyStore((state) => state.history)
+  const profile = useUserStore((state) => state.profile)
+  const history = useUserStore((state) => state.history)
+  const ensureSession = useUserStore((state) => state.ensureSession)
   const startQuiz = useStudyStore((state) => state.startQuiz)
   const openQuiz = useStudyStore((state) => state.openQuiz)
-  const viewReport = useStudyStore((state) => state.viewReport)
+  const demoRecords = useStudyStore((state) => state.demoRecords)
 
-  const completedRecords = useMemo(
-    () => history.filter((record) => record.status === 'completed'),
-    [history]
-  )
+  useDidShow(() => {
+    void ensureSession()
+  })
+
+  const completedRecords = useMemo(() => history.slice(0, 4), [history])
   const inProgressRecords = useMemo(
-    () => history.filter((record) => record.status === 'in_progress'),
-    [history]
+    () => demoRecords.filter((record) => record.status === 'in_progress'),
+    [demoRecords]
   )
 
   const handleGenerate = async () => {
@@ -75,10 +78,8 @@ export default function IndexPage() {
     }
   }
 
-  const handleOpenReport = (record: QuizRecord) => {
-    if (viewReport(record.quiz.quiz_id)) {
-      Taro.navigateTo({ url: '/pages/report/index' })
-    }
+  const handleOpenReport = (item: QuizHistoryItem) => {
+    Taro.navigateTo({ url: `/pages/report/index?quiz_id=${item.quiz_id}` })
   }
 
   const progressOf = (record: QuizRecord): number => {
@@ -96,9 +97,9 @@ export default function IndexPage() {
             <View className='hello-avatar'>
               <Text>鱼</Text>
             </View>
-            <Text className='hello-name'>你好，{nickname}</Text>
+            <Text className='hello-name'>你好，{profile?.nickname ?? '学习者'}</Text>
           </View>
-          <CoinBadge value={coins} />
+          <XpBadge value={profile?.total_xp ?? 0} />
         </View>
 
         <Text className='home-title'>今天想闯哪一关？</Text>
@@ -148,19 +149,15 @@ export default function IndexPage() {
 
         {completedRecords.length > 0 ? (
           <View className='quiz-cards'>
-            {completedRecords.slice(0, 4).map((record) => (
-              <View
-                className='quiz-card'
-                key={record.quiz.quiz_id}
-                onClick={() => handleOpenReport(record)}
-              >
+            {completedRecords.map((item) => (
+              <View className='quiz-card' key={item.quiz_id} onClick={() => handleOpenReport(item)}>
                 <View className='quiz-card__dot'>
                   <Text>✓</Text>
                 </View>
                 <View className='quiz-card__body'>
-                  <Text className='quiz-card__name'>{record.quiz.title}</Text>
+                  <Text className='quiz-card__name'>{item.title}</Text>
                   <Text className='quiz-card__meta'>
-                    关键词：{quizKeywords(record.quiz).join(' / ') || '核心概念'}
+                    正确率 {item.accuracy}% · 共 {item.question_count} 题
                   </Text>
                 </View>
               </View>

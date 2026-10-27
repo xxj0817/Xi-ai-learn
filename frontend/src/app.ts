@@ -1,6 +1,8 @@
 import { PropsWithChildren } from 'react'
 import { useLaunch } from '@tarojs/taro'
+
 import { useStudyStore } from '@/store/useStudyStore'
+import { useUserStore } from '@/store/useUserStore'
 
 import './app.scss'
 
@@ -13,6 +15,7 @@ function App({ children }: PropsWithChildren) {
     } else {
       seed()
     }
+    void useUserStore.getState().ensureSession()
   })
 
   return children

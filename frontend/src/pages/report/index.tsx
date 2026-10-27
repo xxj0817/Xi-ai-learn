@@ -1,13 +1,15 @@
 import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
-import CoinBadge from '@/components/CoinBadge'
 import Icon from '@/components/Icon'
 import ProgressRing from '@/components/ProgressRing'
 import StatusBarSpacer from '@/components/StatusBarSpacer'
 import TabBar from '@/components/TabBar'
+import XpBadge from '@/components/XpBadge'
+import { fetchQuizDetail } from '@/services/api'
 import { useStudyStore } from '@/store/useStudyStore'
+import type { Report } from '@/types/quiz'
 
 import './index.scss'
 
@@ -22,17 +24,92 @@ function resolveTitle(accuracy: number): string {
 }
 
 export default function ReportPage() {
-  const quiz = useStudyStore((state) => state.quiz)
-  const report = useStudyStore((state) => state.report)
+  const storeQuiz = useStudyStore((state) => state.quiz)
+  const storeReport = useStudyStore((state) => state.report)
+
+  const quizId = Taro.getCurrentInstance().router?.params?.quiz_id ?? ''
+  const [title, setTitle] = useState(storeQuiz?.title ?? '')
+  const [report, setReport] = useState<Report | null>(storeReport)
+  const [loading, setLoading] = useState(Boolean(quizId))
+  const [failed, setFailed] = useState('')
 
   useEffect(() => {
-    if (!quiz || !report) {
-      Taro.reLaunch({ url: '/pages/index/index' })
+    if (!quizId) {
+      if (!storeQuiz || !storeReport) {
+        Taro.reLaunch({ url: '/pages/index/index' })
+      }
+      return
     }
-  }, [quiz, report])
 
-  if (!quiz || !report) {
-    return null
+    let alive = true
+    setLoading(true)
+    fetchQuizDetail(quizId)
+      .then((detail) => {
+        if (!alive) {
+          return
+        }
+        setTitle(detail.title)
+        setReport(detail.report)
+      })
+      .catch((error) => {
+        if (alive) {
+          setFailed(error instanceof Error ? error.message : '报告加载失败')
+        }
+      })
+      .finally(() => {
+        if (alive) {
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      alive = false
+    }
+  }, [quizId, storeQuiz, storeReport])
+
+  const handleAgain = () => {
+    Taro.reLaunch({ url: '/pages/index/index' })
+  }
+
+  const handlePoster = () => {
+    Taro.showToast({ title: '分享海报功能将在后续版本开放', icon: 'none' })
+  }
+
+  if (loading) {
+    return (
+      <View className='report-page app-page'>
+        <StatusBarSpacer />
+        <View className='loading-mask'>
+          <View className='loading-card'>
+            <View className='loading-spinner' />
+            <Text className='loading-card__text'>正在加载通关报告…</Text>
+          </View>
+        </View>
+      </View>
+    )
+  }
+
+  if (failed || !report) {
+    return (
+      <View className='report-page app-page'>
+        <StatusBarSpacer />
+        <View className='report-page__body'>
+          <View className='report-nav'>
+            <View className='report-nav__back' onClick={handleAgain}>
+              <Icon name='arrowLeft' size={16} color='#7a8996' />
+            </View>
+            <Text className='report-nav__label'>通关报告</Text>
+          </View>
+          <Text className='report-title'>{failed || '这一关还没有通关报告'}</Text>
+          <View className='report-actions'>
+            <Button className='report-actions__again' onClick={handleAgain}>
+              回到首页
+            </Button>
+          </View>
+        </View>
+        <TabBar active='profile' />
+      </View>
+    )
   }
 
   const wrongCount = report.total - report.correct
@@ -44,14 +121,6 @@ export default function ReportPage() {
           weakPoints[0]
         }还要多练。`
       : '本关知识点全部掌握，保持这个节奏。'
-
-  const handleAgain = () => {
-    Taro.reLaunch({ url: '/pages/index/index' })
-  }
-
-  const handlePoster = () => {
-    Taro.showToast({ title: '分享海报功能将在后续版本开放', icon: 'none' })
-  }
 
   return (
     <View className='report-page app-page'>
@@ -66,8 +135,8 @@ export default function ReportPage() {
         </View>
 
         <View className='report-toolbar'>
-          <Text className='report-toolbar__topic'>{quiz.title}</Text>
-          <CoinBadge value='+20 XP' showIcon={false} />
+          <Text className='report-toolbar__topic'>{title}</Text>
+          <XpBadge value={`+${report.xp_gained ?? 0} XP`} showIcon={false} />
         </View>
 
         <Text className='report-title'>{resolveTitle(report.accuracy)}</Text>

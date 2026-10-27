@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -12,11 +14,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1.router import api_router
 from app.core.config import Settings, get_settings
+from app.core.db import Database
 from app.core.exceptions import AppError, RouteNotFound
 from app.core.logging import configure_logging
 from app.core.security import RateLimiter
 from app.llm.base import LearningAIProvider
 from app.llm.factory import build_provider
+from app.repositories.quiz_repository import QuizRepository
+from app.repositories.user_repository import UserRepository
+from app.services.wechat_client import HttpWeChatClient, build_wechat_client
 
 logger = logging.getLogger(__name__)
 
@@ -29,9 +35,35 @@ def create_app(
     *,
     settings: Settings | None = None,
     provider: LearningAIProvider | None = None,
+    db: Database | None = None,
+    wechat_client: HttpWeChatClient | None = None,
+    user_repo: object | None = None,
+    quiz_repo: object | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        database = db if db is not None else (Database(settings) if settings.mysql_enabled else None)
+        app.state.db = database
+        if database is not None:
+            try:
+                await database.connect()
+            except Exception as exc:  # noqa: BLE001 - 数据库不可用时降级，不让整个服务起不来
+                logger.warning("MySQL 连接失败，用户相关能力将不可用：%s", type(exc).__name__)
+                app.state.db = None
+
+        if app.state.user_repo is None and app.state.db is not None:
+            app.state.user_repo = UserRepository(app.state.db)
+        if app.state.quiz_repo is None and app.state.db is not None:
+            app.state.quiz_repo = QuizRepository(app.state.db)
+
+        try:
+            yield
+        finally:
+            if app.state.db is not None:
+                await app.state.db.close()
 
     app = FastAPI(
         title=settings.app_name,
@@ -39,10 +71,15 @@ def create_app(
         docs_url="/docs",
         redoc_url=None,
         openapi_url="/openapi.json",
+        lifespan=lifespan,
     )
     app.state.settings = settings
     app.state.provider = provider or build_provider(settings)
     app.state.rate_limiter = RateLimiter(settings.rate_limit_per_minute)
+    app.state.db = None
+    app.state.wechat_client = wechat_client or build_wechat_client(settings)
+    app.state.user_repo = user_repo
+    app.state.quiz_repo = quiz_repo
 
     app.add_middleware(
         CORSMiddleware,

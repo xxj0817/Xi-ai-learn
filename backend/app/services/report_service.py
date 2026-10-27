@@ -8,7 +8,9 @@ from typing import Any
 from app.core.exceptions import AIProviderError, AppError
 from app.llm.base import LearningAIProvider
 from app.models.report import Report, ReportGenerateRequest
+from app.repositories.quiz_repository import QuizRepositoryProtocol
 from app.services.scoring_service import ScoreSummary, build_score_summary
+from app.services.xp_rules import calculate_xp
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +24,15 @@ _FALLBACK_WEAK = "尝试更高难度的题目"
 
 
 class ReportService:
-    def __init__(self, provider: LearningAIProvider) -> None:
+    def __init__(
+        self,
+        provider: LearningAIProvider,
+        quiz_repository: QuizRepositoryProtocol | None = None,
+    ) -> None:
         self._provider = provider
+        self._quiz_repository = quiz_repository
 
-    async def generate(self, request: ReportGenerateRequest) -> Report:
+    async def generate(self, request: ReportGenerateRequest, *, user_id: int | None = None) -> Report:
         summary = build_score_summary(request.questions, request.answer_records)
         stats = self._build_stats(summary)
         question_results = [result.model_dump() for result in summary.results]
@@ -46,7 +53,7 @@ class ReportService:
         if draft is None:
             raise AIProviderError()
 
-        return Report(
+        report = Report(
             accuracy=summary.accuracy,
             total=summary.total,
             correct=summary.correct,
@@ -56,6 +63,42 @@ class ReportService:
             advice=self._normalize_advice(draft.advice),
             share_quote=self._normalize_quote(draft.share_quote),
         )
+
+        report.xp_gained = await self._persist(request, summary, report, user_id)
+        return report
+
+    async def _persist(
+        self,
+        request: ReportGenerateRequest,
+        summary: ScoreSummary,
+        report: Report,
+        user_id: int | None,
+    ) -> int:
+        if user_id is None or self._quiz_repository is None:
+            return 0
+
+        xp_gained = calculate_xp(summary.correct)
+        payload = report.model_copy(update={"xp_gained": xp_gained}).model_dump(mode="json")
+
+        try:
+            awarded = await self._quiz_repository.complete_quiz(
+                quiz_id=request.quiz_id,
+                user_id=user_id,
+                records=[record.model_dump(mode="json") for record in request.answer_records],
+                total_questions=summary.total,
+                correct_count=summary.correct,
+                accuracy=float(summary.accuracy),
+                report=payload,
+                xp_gained=xp_gained,
+            )
+        except Exception as exc:  # noqa: BLE001 - 持久化失败不应影响报告返回
+            logger.warning("报告落库失败 quiz_id=%s error=%s", request.quiz_id, type(exc).__name__)
+            return 0
+
+        if not awarded:
+            logger.info("重复提交报告，跳过经验值发放 quiz_id=%s", request.quiz_id)
+            return 0
+        return xp_gained
 
     def _build_stats(self, summary: ScoreSummary) -> dict[str, Any]:
         return {

@@ -5,3 +5,6 @@ pydantic-settings==2.16.1
 langchain==1.4.7
 langchain-core==1.7.0
 langchain-openai==1.7.2
+aiomysql==0.3.2
+PyJWT==2.15.1
+cryptography==50.0.2

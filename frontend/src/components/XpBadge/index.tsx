@@ -4,16 +4,16 @@ import Icon from '@/components/Icon'
 
 import './index.scss'
 
-interface CoinBadgeProps {
+interface XpBadgeProps {
   value: number | string
   showIcon?: boolean
   className?: string
 }
 
-export default function CoinBadge({ value, showIcon = true, className }: CoinBadgeProps) {
+export default function XpBadge({ value, showIcon = true, className }: XpBadgeProps) {
   return (
-    <View className={className ? `coin-badge ${className}` : 'coin-badge'}>
-      <Text className='coin-badge__value'>{value}</Text>
+    <View className={className ? `xp-badge ${className}` : 'xp-badge'}>
+      <Text className='xp-badge__value'>{value}</Text>
       {showIcon ? <Icon name='coin' size={18} /> : null}
     </View>
   )

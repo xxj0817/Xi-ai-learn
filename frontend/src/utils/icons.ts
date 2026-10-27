@@ -16,6 +16,7 @@ export type IconName =
   | 'close'
   | 'star'
   | 'trendDown'
+  | 'edit'
 
 const STROKE_ICONS: Record<string, string> = {
   checkCircle: '<circle cx="12" cy="12" r="9"/><path d="M8 12L11 15L16 9"/>',
@@ -31,7 +32,8 @@ const STROKE_ICONS: Record<string, string> = {
   arrowLeft: '<path d="M19 12H5"/><path d="M11 18L5 12L11 6"/>',
   close: '<path d="M6 6L18 18"/><path d="M18 6L6 18"/>',
   star: '<path d="M12 3L14.6 8.2L20 9L16 13L17 19L12 16L7 19L8 13L4 9L9.4 8.2Z"/>',
-  trendDown: '<path d="M4 7L10 13L14 9L20 15"/><path d="M20 9V15H14"/>'
+  trendDown: '<path d="M4 7L10 13L14 9L20 15"/><path d="M20 9V15H14"/>',
+  edit: '<path d="M4 20H8L19 9L15 5L4 16V20Z"/><path d="M14 6L18 10"/>'
 }
 
 const FILLED_ICONS: Record<string, string> = {

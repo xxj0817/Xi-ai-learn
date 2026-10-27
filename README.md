@@ -90,8 +90,18 @@ npm run dev:h5      # H5 预览 http://localhost:10086
 > 构建约定：
 > 1. `config/index.ts` 已关闭 `prebundle`（依赖预编译），否则小程序端会出现
 >    `Cannot access 'c' before initialization`（`taro.js` 分块 TDZ）导致白屏。
-> 2. 同一时间只能有一个构建进程写入 `dist/`；多个 `dev:weapp` 并发会互相覆盖产物。
-> 3. 若仿真器白屏但控制台无报错，先点「编译」，再尝试关闭「设置 → 通用设置 → GPU 加速」。
+> 2. 同一时间只能有一个构建进程写入产物目录；多个 `dev:weapp` 并发会互相覆盖。
+> 3. H5 与小程序产物分目录：`build:h5` → `dist-h5/`，`build:weapp` → `dist/`。
+>    如果 H5 产物写进了 `dist/`，模拟器会报 `根据 miniprogramRoot 指定的目录 dist/ 未找到 app.json`。
+> 4. 重新 `build:weapp` 后模拟器**可能仍在跑旧的编译缓存**，表现为文案/样式没更新，或白屏但控制台不报错。
+>    按顺序尝试：开发者工具点「编译」按钮 → 关闭项目重新打开 → 彻底退出开发者工具后重新启动。
+>    用命令行重新拉起可确保加载最新产物（以实际安装路径为准）：
+>
+>    ```bash
+>    "<开发者工具安装目录>/cli.bat" auto --project frontend --auto-port 9420
+>    ```
+>
+> 5. 上述步骤都无效时，再尝试关闭「设置 → 通用设置 → GPU 加速」。
 
 ## API
 

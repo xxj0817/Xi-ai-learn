@@ -91,6 +91,27 @@
   }
 }
 
+.profile-rename {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px 14px;
+  border-radius: $radius-pill;
+  border: 1px solid #f2ddcd;
+  background: #fff6ee;
+  color: $color-orange-deep;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.profile-error {
+  display: block;
+  margin-top: 8px;
+  color: #b64f40;
+  font-size: 12px;
+}
+
 .profile-section {
   display: block;
   margin: 16px 0 10px;

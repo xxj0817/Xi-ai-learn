@@ -31,3 +31,5 @@ class Report(BaseModel):
     three_line_summary: list[str]
     advice: list[str]
     share_quote: str
+    # 本次获得经验值；匿名模式或重复提交时为 0
+    xp_gained: int = 0
