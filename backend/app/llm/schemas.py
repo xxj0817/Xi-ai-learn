@@ -46,6 +46,7 @@ class QuestionDraft(BaseModel):
     explanation: str = ""
     knowledge_point: str = ""
     difficulty: Difficulty = Difficulty.easy
+    citations: list[str] = Field(default_factory=list)
 
     @field_validator("type", mode="before")
     @classmethod
@@ -64,6 +65,18 @@ class QuestionDraft(BaseModel):
         if isinstance(value, (list, tuple, set)):
             return [str(item) for item in value]
         return [str(value)]
+
+    @field_validator("citations", mode="before")
+    @classmethod
+    def coerce_citations(cls, value: Any) -> list[str]:
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, (list, tuple, set)):
+            return [str(item) for item in value]
+        return [str(value)]
+
 
     @field_validator("difficulty", mode="before")
     @classmethod
@@ -88,3 +101,14 @@ class ReportDraft(BaseModel):
     three_line_summary: list[str] = Field(default_factory=list)
     advice: list[str] = Field(default_factory=list)
     share_quote: str = ""
+
+
+class ResearchBrief(BaseModel):
+    """研究 Agent 的结构化输出。"""
+
+    model_config = ConfigDict(extra="ignore")
+
+    topic: str = ""
+    used_urls: list[str] = Field(default_factory=list)
+    ambiguity_note: str = ""
+

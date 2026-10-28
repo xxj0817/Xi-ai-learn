@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 from app.llm.schemas import QuestionDraft, QuestionOptionDraft, QuizDraft, ReportDraft
+from app.models.quiz import QuizSource
 
 _TYPE_PLAN = ["single", "single", "single", "multiple", "judge"]
 
@@ -16,14 +17,16 @@ class MockProvider:
         topic: str,
         question_count: int,
         difficulty: str,
+        sources: Sequence[QuizSource] = (),
         strict: bool = False,
     ) -> QuizDraft:
         plan = list(_TYPE_PLAN) if question_count >= len(_TYPE_PLAN) else _TYPE_PLAN[:question_count]
         while len(plan) < question_count:
             plan.append("single")
 
+        source_ids = [source.id for source in sources]
         questions = [
-            self._build_question(index, question_type, topic, difficulty)
+            self._build_question(index, question_type, topic, difficulty, source_ids)
             for index, question_type in enumerate(plan, start=1)
         ]
 
@@ -70,7 +73,9 @@ class MockProvider:
         question_type: str,
         topic: str,
         difficulty: str,
+        source_ids: Sequence[str] = (),
     ) -> QuestionDraft:
+        citations = [source_ids[0]] if source_ids else []
         if question_type == "judge":
             return QuestionDraft(
                 type="judge",
@@ -86,6 +91,7 @@ class MockProvider:
                 ),
                 knowledge_point="理解优先于记忆",
                 difficulty="easy",
+                citations=citations,
             )
 
         if question_type == "multiple":
@@ -105,6 +111,7 @@ class MockProvider:
                 ),
                 knowledge_point="学习方法",
                 difficulty="medium",
+                citations=citations,
             )
 
         stems = [
@@ -142,4 +149,5 @@ class MockProvider:
             explanation=explanation,
             knowledge_point="概念理解",
             difficulty=difficulty if difficulty in {"easy", "medium", "hard"} else "easy",
+            citations=citations,
         )

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
+
 from fastapi.testclient import TestClient
 
+from app.services.research_service import ResearchResult
 from tests.conftest import FakeProvider, build_question_draft, build_quiz_draft
 
 
@@ -151,3 +154,141 @@ def test_question_type_ratio_is_preserved(client: TestClient) -> None:
     types = [question["type"] for question in response.json()["data"]["questions"]]
     assert types.count("multiple") == 1
     assert types.count("judge") == 1
+
+
+def test_valid_source_fields_are_accepted(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/quiz/generate",
+        json=generate_payload(
+            source_text="用户提供的参考资料",
+            source_urls=["https://example.com/a", "https://example.com/a"],
+            region="CN",
+            locale="zh-CN",
+        ),
+    )
+
+    assert response.status_code == 200
+
+
+def test_non_http_source_url_is_rejected(client: TestClient, provider: FakeProvider) -> None:
+    response = client.post(
+        "/api/v1/quiz/generate",
+        json=generate_payload(source_urls=["ftp://example.com/a"]),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == 4001
+    assert provider.quiz_calls == []
+
+
+def test_javascript_source_url_is_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/quiz/generate",
+        json=generate_payload(source_urls=["javascript:alert(1)"]),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == 4001
+
+
+def test_too_many_source_urls_are_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/quiz/generate",
+        json=generate_payload(
+            source_urls=[
+                "https://example.com/1",
+                "https://example.com/2",
+                "https://example.com/3",
+                "https://example.com/4",
+            ]
+        ),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == 4001
+
+
+def test_too_long_source_text_is_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/quiz/generate",
+        json=generate_payload(source_text="知" * 20_001),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == 4001
+
+
+def test_too_long_region_is_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/quiz/generate",
+        json=generate_payload(region="x" * 33),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == 4001
+
+
+class RaisingResearchService:
+    async def gather(self, **kwargs):
+        raise asyncio.TimeoutError()
+
+
+class EmptyResearchService:
+    async def gather(self, **kwargs):
+        return ResearchResult(
+            topic="RAG",
+            sources=[],
+            provider="none",
+            searched_at=None,
+            evidence_chars=0,
+            mode="none",
+        )
+
+
+def assert_model_only_response(response) -> None:
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["sources"] == []
+    assert data["grounding"]["status"] == "model_only"
+    assert data["grounding"]["provider"] == "none"
+    assert data["grounding"]["evidence_chars"] == 0
+    assert all(question["citations"] == [] for question in data["questions"])
+
+
+def test_generate_without_tavily_key_returns_model_only(client: TestClient) -> None:
+    response = client.post("/api/v1/quiz/generate", json=generate_payload())
+
+    assert_model_only_response(response)
+
+
+def test_research_timeout_degrades_to_model_only(client: TestClient) -> None:
+    client.app.state.research_service = RaisingResearchService()
+
+    response = client.post("/api/v1/quiz/generate", json=generate_payload())
+
+    assert_model_only_response(response)
+
+
+def test_research_empty_sources_degrades_to_model_only(client: TestClient) -> None:
+    client.app.state.research_service = EmptyResearchService()
+
+    response = client.post("/api/v1/quiz/generate", json=generate_payload())
+
+    assert_model_only_response(response)
+
+
+def test_response_keeps_old_fields_and_exposes_grounding_fields(client: TestClient) -> None:
+    response = client.post("/api/v1/quiz/generate", json=generate_payload())
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    for key in ("quiz_id", "title", "summary", "source_type", "user_input", "questions"):
+        assert key in data
+    assert isinstance(data["sources"], list)
+    assert isinstance(data["grounding"], dict)
+    assert "status" in data["grounding"]
+    assert "citations" in data["questions"][0]
+    assert data["questions"][0]["options"][0].keys() == {"key", "text"}
+
+
+

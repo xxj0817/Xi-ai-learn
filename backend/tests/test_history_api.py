@@ -181,3 +181,57 @@ def test_quiz_detail_requires_token() -> None:
         response = client.get("/api/v1/user/quizzes/quiz_1")
 
     assert response.status_code == 401
+
+
+def test_quiz_detail_returns_sources_and_grounding_when_saved() -> None:
+    app, quiz_repo, _ = build()
+    settings = persistence_settings()
+
+    with TestClient(app) as client:
+        headers = auth_headers(user_id=1, settings=settings)
+        quiz = generate_quiz(client, headers)
+        quiz_repo.grounding[quiz["quiz_id"]] = {
+            "user_id": 1,
+            "sources": [
+                {
+                    "id": "S1",
+                    "title": "Harness Engineering",
+                    "url": "https://example.com/harness",
+                    "snippet": "AI Agent 工程实践",
+                    "origin": "web",
+                }
+            ],
+            "grounding": {
+                "status": "grounded",
+                "provider": "tavily",
+                "searched_at": "2026-10-28T10:00:00+00:00",
+                "evidence_chars": 12,
+            },
+        }
+
+        data = client.get(
+            f"/api/v1/user/quizzes/{quiz['quiz_id']}", headers=headers
+        ).json()["data"]
+
+    assert data["sources"][0]["id"] == "S1"
+    assert data["grounding"]["status"] == "grounded"
+    assert data["grounding"]["provider"] == "tavily"
+
+
+def test_quiz_detail_without_grounding_uses_defaults() -> None:
+    app, quiz_repo, _ = build()
+    settings = persistence_settings()
+
+    with TestClient(app) as client:
+        headers = auth_headers(user_id=1, settings=settings)
+        quiz = generate_quiz(client, headers)
+        quiz_repo.grounding.pop(quiz["quiz_id"], None)
+
+        data = client.get(
+            f"/api/v1/user/quizzes/{quiz['quiz_id']}", headers=headers
+        ).json()["data"]
+
+    assert data["sources"] == []
+    assert data["grounding"]["status"] == "model_only"
+    assert data["grounding"]["provider"] == "none"
+

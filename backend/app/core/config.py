@@ -40,6 +40,44 @@ class Settings(BaseSettings):
     llm_max_attempts: int = Field(default=2, ge=1, le=3)
     llm_top_p: float = Field(default=0.9, gt=0, le=1)
 
+    # ===== 联网检索（Tavily） =====
+    web_search_enabled: bool = True
+    web_search_provider: Literal["tavily", "none"] = "tavily"
+    tavily_api_key: str = ""
+    tavily_base_url: str = "https://api.tavily.com"
+    # 显式指定代理时走官方工具的同步 requests 路径；留空表示直连
+    tavily_proxy_url: str = ""
+    tavily_trust_env_proxy: bool = False
+    tavily_tool_timeout_seconds: float = Field(default=10.0, gt=0, le=120)
+    tavily_search_result_max_chars: int = Field(default=4000, ge=200, le=50000)
+    tavily_extract_result_max_chars: int = Field(default=15000, ge=500, le=100000)
+    tavily_tool_total_max_chars: int = Field(default=24000, ge=1000, le=200000)
+    tavily_quick_max_results: int = Field(default=4, ge=1, le=20)
+    tavily_quick_search_depth: Literal["basic", "advanced", "fast", "ultra-fast"] = "basic"
+    tavily_deep_max_results: int = Field(default=5, ge=1, le=20)
+    tavily_deep_search_depth: Literal["basic", "advanced", "fast", "ultra-fast"] = "advanced"
+    tavily_deep_include_raw_content: Literal["markdown", "text"] = "markdown"
+    tavily_extract_format: Literal["markdown", "text"] = "markdown"
+    tavily_extract_chunks_per_source: int = Field(default=3, ge=1, le=5)
+
+    # ===== 研究 Agent =====
+    research_agent_timeout_seconds: float = Field(default=30.0, gt=0, le=180)
+    research_agent_max_model_calls: int = Field(default=6, ge=1, le=20)
+    research_agent_max_tool_calls: int = Field(default=6, ge=1, le=50)
+    research_agent_recursion_limit: int = Field(default=30, ge=2, le=100)
+    research_temperature: float = Field(default=0.2, ge=0, le=2)
+    research_max_tokens: int = Field(default=1600, ge=256, le=8192)
+
+    # ===== 来源与缓存 =====
+    web_search_max_sources: int = Field(default=6, ge=1, le=20)
+    source_snippet_max_chars: int = Field(default=1200, ge=100, le=10000)
+    user_source_snippet_max_chars: int = Field(default=4000, ge=100, le=20000)
+    source_total_max_chars: int = Field(default=12000, ge=1000, le=50000)
+    user_source_min_chars: int = Field(default=800, ge=100, le=10000)
+    user_source_text_max_chars: int = Field(default=20000, ge=1000, le=100000)
+    user_source_max_urls: int = Field(default=3, ge=1, le=10)
+    web_search_cache_ttl_seconds: int = Field(default=1800, ge=0, le=86400)
+
     quiz_temperature: float = Field(default=0.4, ge=0, le=2)
     quiz_max_tokens: int = Field(default=2400, ge=256, le=8192)
     report_temperature: float = Field(default=0.5, ge=0, le=2)
@@ -50,6 +88,16 @@ class Settings(BaseSettings):
     quiz_max_question_count: int = Field(default=8, ge=1, le=10)
     quiz_min_input_chars: int = Field(default=2, ge=1, le=50)
     quiz_max_input_chars: int = Field(default=2000, ge=50, le=20000)
+
+    # ===== 异步出题任务 =====
+    # 前端轮询间隔，随任务状态一起下发
+    quiz_task_poll_interval_ms: int = Field(default=2000, ge=500, le=15000)
+    # 单次出题（检索 + 生成 + 校验）的整体超时
+    quiz_task_timeout_seconds: float = Field(default=240.0, gt=0, le=900)
+    # 同时执行的出题任务上限，超出后任务保持 pending 排队
+    quiz_task_max_concurrency: int = Field(default=2, ge=1, le=20)
+    # 终态任务的保留时长，超时后清理
+    quiz_task_retention_hours: int = Field(default=24, ge=1, le=720)
 
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = Field(default=20, ge=1, le=1000)
@@ -101,6 +149,12 @@ class Settings(BaseSettings):
             raise ValueError("llm_provider=deepseek 时必须配置 DEEPSEEK_API_KEY")
         if self.mysql_pool_min_size > self.mysql_pool_max_size:
             raise ValueError("mysql_pool_min_size 不能大于 mysql_pool_max_size")
+        if self.user_source_min_chars > self.user_source_text_max_chars:
+            raise ValueError("user_source_min_chars 不能大于 user_source_text_max_chars")
+        if self.source_snippet_max_chars > self.source_total_max_chars:
+            raise ValueError("source_snippet_max_chars 不能大于 source_total_max_chars")
+        if self.user_source_snippet_max_chars > self.source_total_max_chars:
+            raise ValueError("user_source_snippet_max_chars 不能大于 source_total_max_chars")
         return self
 
 

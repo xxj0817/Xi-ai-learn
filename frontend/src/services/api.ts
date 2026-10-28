@@ -1,6 +1,6 @@
 import { request } from '@/services/request'
 import type { AnswerRecordPayload, GenerateQuizPayload, GenerateReportPayload } from '@/types/api'
-import type { Quiz, Report } from '@/types/quiz'
+import type { Quiz, QuizTask, Report } from '@/types/quiz'
 import type {
   InProgressQuizList,
   QuizDetail,
@@ -14,6 +14,18 @@ export function generateQuiz(payload: GenerateQuizPayload): Promise<Quiz> {
     method: 'POST',
     data: payload
   })
+}
+
+export function createQuizTask(payload: GenerateQuizPayload): Promise<QuizTask> {
+  return request<QuizTask>({
+    url: '/quiz/tasks',
+    method: 'POST',
+    data: payload
+  })
+}
+
+export function fetchQuizTask(taskId: string): Promise<QuizTask> {
+  return request<QuizTask>({ url: `/quiz/tasks/${taskId}` })
 }
 
 export function generateReport(payload: GenerateReportPayload): Promise<Report> {

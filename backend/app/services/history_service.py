@@ -67,6 +67,8 @@ class HistoryService:
             status=detail.get("status") or "completed",
             report=detail.get("report"),
             created_at=_format_time(detail.get("created_at")),
+            sources=detail.get("sources") or [],
+            grounding=detail.get("grounding") or {},
         )
 
     async def list_in_progress(self, *, user_id: int, limit: int = 10) -> InProgressQuizList:

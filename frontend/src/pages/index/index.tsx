@@ -1,16 +1,24 @@
 import { Button, Image, Text, Textarea, View } from '@tarojs/components'
-import Taro, { useDidShow } from '@tarojs/taro'
-import { useMemo, useState } from 'react'
+import Taro, { useDidHide, useDidShow } from '@tarojs/taro'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 import Icon from '@/components/Icon'
 import ProgressRing from '@/components/ProgressRing'
 import TabBar from '@/components/TabBar'
 import XpBadge from '@/components/XpBadge'
-import { generateQuiz } from '@/services/api'
+import { createQuizTask } from '@/services/api'
 import { useStudyStore } from '@/store/useStudyStore'
 import { useUserStore } from '@/store/useUserStore'
+import type { QuizTask, QuizTaskStage } from '@/types/quiz'
 import type { InProgressQuizItem, QuizHistoryItem } from '@/types/user'
 import { levelAvatarSvg, mascotSvg } from '@/utils/icons'
+import {
+  QuizTaskCancelledError,
+  forgetQuizTask,
+  recallQuizTask,
+  rememberQuizTask,
+  waitForQuizTask
+} from '@/utils/quizTask'
 import { resumeQuizById } from '@/utils/resume'
 import { svgToDataUri } from '@/utils/svg'
 
@@ -19,11 +27,24 @@ import './index.scss'
 const TEXTAREA_PLACEHOLDER =
   '例如：RAG 和传统搜索有什么区别？\n我想顺便搞懂向量数据库是怎么配合工作的。\n最好通过闯关题帮我记住重点。'
 
+const STAGE_TEXT: Record<QuizTaskStage, string> = {
+  queued: '任务已创建，正在排队…',
+  researching: '正在联网检索最新资料…',
+  generating: 'AI 正在组织闯关题目…',
+  validating: '正在校验答案与来源引证…',
+  saving: '正在保存题库…',
+  completed: '生成完成，即将进入闯关…',
+  failed: '生成失败'
+}
+
 export default function IndexPage() {
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [task, setTask] = useState<QuizTask | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [resumingId, setResumingId] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const activeRef = useRef(false)
+  const loading = submitting || task !== null
 
   const profile = useUserStore((state) => state.profile)
   const history = useUserStore((state) => state.history)
@@ -31,8 +52,52 @@ export default function IndexPage() {
   const ensureSession = useUserStore((state) => state.ensureSession)
   const startQuiz = useStudyStore((state) => state.startQuiz)
 
+  const runTask = useCallback(
+    async (taskId: string) => {
+      activeRef.current = true
+      try {
+        const finished = await waitForQuizTask(taskId, {
+          onUpdate: (next) => setTask(next),
+          shouldContinue: () => activeRef.current
+        })
+        forgetQuizTask()
+        setTask(null)
+        if (finished.quiz) {
+          startQuiz(finished.quiz)
+          Taro.navigateTo({ url: '/pages/quiz/index' })
+        }
+      } catch (error) {
+        if (error instanceof QuizTaskCancelledError) {
+          return
+        }
+        forgetQuizTask()
+        setTask(null)
+        const message = error instanceof Error ? error.message : '生成失败，请稍后重试'
+        setErrorMessage(message)
+        Taro.showToast({ title: message, icon: 'none' })
+      } finally {
+        activeRef.current = false
+      }
+    },
+    [startQuiz]
+  )
+
   useDidShow(() => {
     void ensureSession()
+    const stored = recallQuizTask()
+    if (!stored || activeRef.current) {
+      return
+    }
+    if (stored.input) {
+      setInput((current) => current || stored.input)
+    }
+    setErrorMessage('')
+    setSubmitting(true)
+    void runTask(stored.task_id).finally(() => setSubmitting(false))
+  })
+
+  useDidHide(() => {
+    activeRef.current = false
   })
 
   const completedRecords = useMemo(() => history.slice(0, 4), [history])
@@ -47,22 +112,23 @@ export default function IndexPage() {
       return
     }
 
-    setLoading(true)
+    setSubmitting(true)
     setErrorMessage('')
     try {
-      const quiz = await generateQuiz({
+      const created = await createQuizTask({
         user_input: value,
         question_count: 5,
         difficulty: 'mixed'
       })
-      startQuiz(quiz)
-      Taro.navigateTo({ url: '/pages/quiz/index' })
+      rememberQuizTask({ task_id: created.task_id, input: value })
+      setTask(created)
+      await runTask(created.task_id)
     } catch (error) {
       const message = error instanceof Error ? error.message : '生成失败，请稍后重试'
       setErrorMessage(message)
       Taro.showToast({ title: message, icon: 'none' })
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
@@ -132,6 +198,7 @@ export default function IndexPage() {
           <View className='home-actions'>
             <Button
               className={loading ? 'home-btn home-btn--primary home-btn--loading' : 'home-btn home-btn--primary'}
+              disabled={loading}
               onClick={handleGenerate}
             >
               <Icon name='arrowRight' size={16} color='#ffffff' />
@@ -139,10 +206,20 @@ export default function IndexPage() {
             </Button>
           </View>
 
-          {loading ? (
-            <View className='home-loading'>
-              <View className='home-loading__dot' />
-              <Text className='home-loading__text'>正在整理知识并生成闯关题，请稍候</Text>
+          {task ? (
+            <View className='home-task'>
+              <View className='home-task__bar'>
+                <View
+                  className='home-task__fill'
+                  style={{ width: `${Math.max(task.progress, 4)}%` }}
+                />
+              </View>
+              <View className='home-task__meta'>
+                <Text className='home-task__text'>
+                  {STAGE_TEXT[task.stage] ?? '正在生成，请稍候…'}
+                </Text>
+                <Text className='home-task__percent'>{task.progress}%</Text>
+              </View>
             </View>
           ) : null}
 

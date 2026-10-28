@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import datetime, timezone
 from typing import Any, Protocol
 
 import aiomysql
@@ -15,6 +16,18 @@ logger = logging.getLogger(__name__)
 
 def _dumps(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False)
+
+
+def _parse_searched_at(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is not None:
+        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+    return parsed
 
 
 def _loads(value: Any) -> Any:
@@ -39,6 +52,15 @@ class QuizRepositoryProtocol(Protocol):
         summary: str,
         user_input: str,
         questions: list[dict[str, Any]],
+    ) -> None: ...
+
+    async def save_grounding(
+        self,
+        *,
+        quiz_id: str,
+        user_id: int,
+        sources: list[dict[str, Any]],
+        grounding: dict[str, Any],
     ) -> None: ...
 
     async def complete_quiz(
@@ -102,6 +124,45 @@ class QuizRepository:
                             summary,
                             user_input,
                             _dumps(questions),
+                        ),
+                    )
+                await conn.commit()
+            except Exception:
+                await conn.rollback()
+                raise
+
+    async def save_grounding(
+        self,
+        *,
+        quiz_id: str,
+        user_id: int,
+        sources: list[dict[str, Any]],
+        grounding: dict[str, Any],
+    ) -> None:
+        status = str(grounding.get("status") or "model_only")
+        provider = str(grounding.get("provider") or "none")
+        searched_at = _parse_searched_at(grounding.get("searched_at"))
+        async with self._db.pool.acquire() as conn:
+            try:
+                async with conn.cursor(aiomysql.Cursor) as cursor:
+                    await cursor.execute(
+                        "INSERT INTO quiz_grounding "
+                        "(quiz_id, user_id, sources_json, grounding_json, status, provider, searched_at) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s) AS incoming "
+                        "ON DUPLICATE KEY UPDATE "
+                        "sources_json = incoming.sources_json, "
+                        "grounding_json = incoming.grounding_json, "
+                        "status = incoming.status, "
+                        "provider = incoming.provider, "
+                        "searched_at = incoming.searched_at",
+                        (
+                            quiz_id,
+                            user_id,
+                            _dumps(sources),
+                            _dumps(grounding),
+                            status,
+                            provider,
+                            searched_at,
                         ),
                     )
                 await conn.commit()
@@ -335,6 +396,12 @@ class QuizRepository:
                     (quiz_id, user_id),
                 )
                 row = await cursor.fetchone()
+                await cursor.execute(
+                    "SELECT sources_json, grounding_json FROM quiz_grounding "
+                    "WHERE quiz_id = %s AND user_id = %s",
+                    (quiz_id, user_id),
+                )
+                grounding_row = await cursor.fetchone()
 
         if row is None:
             return None
@@ -354,4 +421,6 @@ class QuizRepository:
             "progress": progress,
             "status": "completed" if records else "in_progress",
             "report": report,
+            "sources": (_loads(grounding_row[0]) or []) if grounding_row else [],
+            "grounding": (_loads(grounding_row[1]) or {}) if grounding_row else {},
         }

@@ -23,7 +23,15 @@ from app.core.security import RateLimiter
 from app.llm.base import LearningAIProvider
 from app.llm.factory import build_provider
 from app.repositories.quiz_repository import QuizRepository
+from app.repositories.quiz_task_repository import (
+    InMemoryQuizTaskRepository,
+    QuizTaskRepository,
+)
 from app.repositories.user_repository import UserRepository
+from app.services.quiz_service import QuizService
+from app.services.quiz_task_service import QuizTaskService
+from app.services.quiz_task_worker import QuizTaskWorker
+from app.services.research_service import build_research_service
 from app.services.wechat_client import HttpWeChatClient, build_wechat_client
 
 logger = logging.getLogger(__name__)
@@ -48,6 +56,9 @@ def create_app(
     wechat_client: HttpWeChatClient | None = None,
     user_repo: object | None = None,
     quiz_repo: object | None = None,
+    research_service: object | None = None,
+    quiz_task_repo: object | None = None,
+    quiz_task_worker: object | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
@@ -68,9 +79,32 @@ def create_app(
         if app.state.quiz_repo is None and app.state.db is not None:
             app.state.quiz_repo = QuizRepository(app.state.db)
 
+        if app.state.quiz_task_repo is None:
+            app.state.quiz_task_repo = (
+                QuizTaskRepository(app.state.db)
+                if app.state.db is not None
+                else InMemoryQuizTaskRepository()
+            )
+        if app.state.quiz_task_worker is None:
+            app.state.quiz_task_worker = QuizTaskWorker(
+                settings=settings,
+                service=QuizTaskService(settings, app.state.quiz_task_repo),
+                quiz_service_factory=lambda: QuizService(
+                    settings,
+                    app.state.provider,
+                    app.state.quiz_repo,
+                    app.state.research_service,
+                ),
+            )
+        # 上次进程遗留的 pending/running 任务不会再执行，启动时统一下线
+        await app.state.quiz_task_worker.recover()
+
         try:
             yield
         finally:
+            worker = getattr(app.state, "quiz_task_worker", None)
+            if worker is not None:
+                await worker.shutdown()
             if app.state.db is not None:
                 await app.state.db.close()
 
@@ -84,11 +118,14 @@ def create_app(
     )
     app.state.settings = settings
     app.state.provider = provider or build_provider(settings)
+    app.state.research_service = research_service or build_research_service(settings)
     app.state.rate_limiter = RateLimiter(settings.rate_limit_per_minute)
     app.state.db = None
     app.state.wechat_client = wechat_client or build_wechat_client(settings)
     app.state.user_repo = user_repo
     app.state.quiz_repo = quiz_repo
+    app.state.quiz_task_repo = quiz_task_repo
+    app.state.quiz_task_worker = quiz_task_worker
     app.state.static_root = _resolve_static_root(settings)
 
     app.add_middleware(
@@ -103,7 +140,11 @@ def create_app(
     async def rate_limit_middleware(request: Request, call_next):  # type: ignore[no-untyped-def]
         path = request.url.path
         protected = path.startswith(settings.api_v1_prefix) and not path.endswith("/health")
-        if settings.rate_limit_enabled and protected:
+        polling = request.method.upper() == "GET" and path.startswith(
+            f"{settings.api_v1_prefix}/quiz/tasks/"
+        )
+        # 前端会按固定间隔轮询任务状态，轮询读取不占用业务限流额度
+        if settings.rate_limit_enabled and protected and not polling:
             client_ip = request.client.host if request.client else "unknown"
             try:
                 app.state.rate_limiter.check(client_ip)

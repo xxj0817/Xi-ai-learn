@@ -109,6 +109,7 @@ class FakeProvider:
         topic: str,
         question_count: int,
         difficulty: str,
+        sources: Any = (),
         strict: bool = False,
     ) -> QuizDraft:
         self.quiz_calls.append(
@@ -116,6 +117,7 @@ class FakeProvider:
                 "topic": topic,
                 "question_count": question_count,
                 "difficulty": difficulty,
+                "sources": [getattr(source, "id", None) for source in sources],
                 "strict": strict,
             }
         )
@@ -229,6 +231,7 @@ class FakeQuizRepository:
         self.completed: list[str] = []
         self.reports: dict[str, dict[str, Any]] = {}
         self.progress: dict[str, list[dict[str, Any]]] = {}
+        self.grounding: dict[str, dict[str, Any]] = {}
         self.xp_by_user: dict[int, int] = {}
         self._user_repository = user_repository
 
@@ -249,6 +252,20 @@ class FakeQuizRepository:
             "summary": summary,
             "user_input": user_input,
             "questions": questions,
+        }
+
+    async def save_grounding(
+        self,
+        *,
+        quiz_id: str,
+        user_id: int,
+        sources: list[dict[str, Any]],
+        grounding: dict[str, Any],
+    ) -> None:
+        self.grounding[quiz_id] = {
+            "user_id": user_id,
+            "sources": sources,
+            "grounding": grounding,
         }
 
     async def complete_quiz(
@@ -366,6 +383,8 @@ class FakeQuizRepository:
             "progress": [] if completion else list(self.progress.get(quiz_id, [])),
             "status": "completed" if completion else "in_progress",
             "report": self.reports.get(quiz_id),
+            "sources": self.grounding.get(quiz_id, {}).get("sources", []),
+            "grounding": self.grounding.get(quiz_id, {}).get("grounding", {}),
         }
 
 
@@ -393,7 +412,15 @@ def provider() -> FakeProvider:
     return FakeProvider()
 
 
-TRUNCATE_ORDER = ("answer_records", "reports", "quiz_sessions", "users")
+TRUNCATE_ORDER = (
+    "answer_records",
+    "reports",
+    "quiz_progress",
+    "quiz_grounding",
+    "quiz_tasks",
+    "quiz_sessions",
+    "users",
+)
 
 
 @pytest.fixture

@@ -16,6 +16,9 @@ MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
 
 _LINE_COMMENT_RE = re.compile(r"^\s*--.*$", re.MULTILINE)
 
+# 幂等迁移：列/索引已存在时继续执行后续语句
+IGNORABLE_MIGRATION_ERRORS = {1060, 1061}
+
 
 def split_sql_statements(script: str) -> list[str]:
     """按分号拆分 SQL 脚本，忽略空语句与整行注释。"""
@@ -94,7 +97,15 @@ class Database:
                         # 表已存在属于正常情况，关闭 sql_notes 避免刷警告
                         await cursor.execute("SET SESSION sql_notes = 0")
                         for statement in split_sql_statements(script):
-                            await cursor.execute(statement)
+                            try:
+                                await cursor.execute(statement)
+                            except Exception as exc:  # noqa: BLE001 - 仅忽略幂等冲突
+                                errno = exc.args[0] if exc.args else None
+                                if errno not in IGNORABLE_MIGRATION_ERRORS:
+                                    raise
+                                logger.debug(
+                                    "迁移语句已生效，跳过重复对象 errno=%s", errno
+                                )
                         await cursor.execute("SET SESSION sql_notes = 1")
                     await conn.commit()
                 except Exception:

@@ -23,6 +23,7 @@ def normalize_quiz(
     quiz_id: str,
     user_input: str,
     expected_count: int,
+    valid_source_ids: set[str] | None = None,
 ) -> Quiz:
     if draft is None:
         raise QuizFormatError("模型没有返回题库内容")
@@ -30,7 +31,10 @@ def normalize_quiz(
     if len(draft.questions) != expected_count:
         raise QuizFormatError(f"题目数量应为 {expected_count}，实际为 {len(draft.questions)}")
 
-    questions = [_normalize_question(item, index) for index, item in enumerate(draft.questions, start=1)]
+    questions = [
+        _normalize_question(item, index, valid_source_ids)
+        for index, item in enumerate(draft.questions, start=1)
+    ]
 
     if expected_count >= 5:
         present = {question.type for question in questions}
@@ -51,7 +55,11 @@ def normalize_quiz(
     )
 
 
-def _normalize_question(draft: QuestionDraft, index: int) -> Question:
+def _normalize_question(
+    draft: QuestionDraft,
+    index: int,
+    valid_source_ids: set[str] | None = None,
+) -> Question:
     stem = draft.stem.strip()
     if not stem:
         raise QuizFormatError(f"第 {index} 题题干为空")
@@ -101,6 +109,15 @@ def _normalize_question(draft: QuestionDraft, index: int) -> Question:
     knowledge_point = draft.knowledge_point.strip() or "核心概念"
     difficulty = draft.difficulty if isinstance(draft.difficulty, Difficulty) else Difficulty.easy
 
+    citations: list[str] = []
+    for raw in draft.citations:
+        key = str(raw).strip().upper()
+        if not key or key in citations:
+            continue
+        if valid_source_ids is not None and key not in valid_source_ids:
+            continue
+        citations.append(key)
+
     return Question(
         id=f"q{index}",
         type=draft.type,
@@ -110,4 +127,5 @@ def _normalize_question(draft: QuestionDraft, index: int) -> Question:
         explanation=explanation,
         knowledge_point=knowledge_point,
         difficulty=difficulty,
+        citations=citations,
     )

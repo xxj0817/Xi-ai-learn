@@ -27,6 +27,35 @@ export interface Quiz {
   questions: Question[]
 }
 
+export type QuizTaskStatus = 'pending' | 'running' | 'succeeded' | 'failed'
+
+export type QuizTaskStage =
+  | 'queued'
+  | 'researching'
+  | 'generating'
+  | 'validating'
+  | 'saving'
+  | 'completed'
+  | 'failed'
+
+export interface QuizTaskError {
+  code: number
+  message: string
+}
+
+export interface QuizTask {
+  task_id: string
+  status: QuizTaskStatus
+  stage: QuizTaskStage
+  progress: number
+  quiz_id: string | null
+  quiz: Quiz | null
+  error: QuizTaskError | null
+  poll_interval_ms: number
+  created_at: string
+  updated_at: string
+}
+
 export interface AnswerState {
   questionId: string
   selected: string[]

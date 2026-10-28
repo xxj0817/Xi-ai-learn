@@ -20,6 +20,7 @@ def make_question(
     knowledge_point: str = "RAG 基础",
     difficulty: str = "easy",
     question_id: str | None = None,
+    citations: list[str] | None = None,
 ) -> QuestionDraft:
     if options is None:
         options = [option("A"), option("B"), option("C"), option("D")]
@@ -35,6 +36,7 @@ def make_question(
             "explanation": explanation,
             "knowledge_point": knowledge_point,
             "difficulty": difficulty,
+            "citations": citations or [],
         }
     )
 
@@ -250,3 +252,39 @@ def test_unknown_difficulty_falls_back_to_easy() -> None:
     )
 
     assert quiz.questions[0].difficulty == "easy"
+
+
+def test_citations_are_normalized_and_filtered() -> None:
+    quiz = normalize_quiz(
+        make_quiz([make_question(citations=["s1", "S1", "S9", " "])]),
+        quiz_id="quiz_test",
+        user_input="RAG",
+        expected_count=1,
+        valid_source_ids={"S1"},
+    )
+
+    assert quiz.questions[0].citations == ["S1"]
+
+
+def test_citations_kept_when_no_valid_source_set() -> None:
+    quiz = normalize_quiz(
+        make_quiz([make_question(citations=["s1", "S9"])]),
+        quiz_id="quiz_test",
+        user_input="RAG",
+        expected_count=1,
+    )
+
+    assert quiz.questions[0].citations == ["S1", "S9"]
+
+
+def test_citations_dropped_when_no_sources() -> None:
+    quiz = normalize_quiz(
+        make_quiz([make_question(citations=["S1"])]),
+        quiz_id="quiz_test",
+        user_input="RAG",
+        expected_count=1,
+        valid_source_ids=set(),
+    )
+
+    assert quiz.questions[0].citations == []
+

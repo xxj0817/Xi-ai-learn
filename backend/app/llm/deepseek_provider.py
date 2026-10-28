@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TypeVar
+from typing import Any, Sequence, TypeVar
 
-import httpx
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel
 
 from app.core.config import Settings
 from app.core.exceptions import AIProviderError
+from app.llm.model_factory import build_deepseek_chat_model
 from app.llm.prompt_builder import build_chat_prompt
 from app.llm.schemas import QuizDraft, ReportDraft
+from app.models.quiz import QuizSource
 from app.prompts.quiz_prompt import build_quiz_messages
 from app.prompts.report_prompt import build_report_messages
 
@@ -31,13 +32,16 @@ class DeepSeekProvider:
         topic: str,
         question_count: int,
         difficulty: str,
+        sources: Sequence[QuizSource] = (),
         strict: bool = False,
     ) -> QuizDraft:
         messages = build_quiz_messages(
             topic,
             question_count=question_count,
             difficulty=difficulty,
+            sources=sources,
             strict=strict,
+            source_total_max_chars=self._settings.source_total_max_chars,
         )
         return await self._invoke(
             QuizDraft,
@@ -69,29 +73,11 @@ class DeepSeekProvider:
             max_tokens=self._settings.report_max_tokens,
         )
 
-    def _build_http_client(self) -> httpx.AsyncClient:
-        proxy_url = self._settings.deepseek_proxy_url.strip()
-        timeout = self._settings.deepseek_timeout_seconds
-        if proxy_url:
-            return httpx.AsyncClient(proxy=proxy_url, trust_env=False, timeout=timeout)
-        return httpx.AsyncClient(trust_env=self._settings.deepseek_trust_env_proxy, timeout=timeout)
-
     def _build_model(self, *, temperature: float, max_tokens: int) -> ChatOpenAI:
-        thinking = "enabled" if self._settings.deepseek_thinking_enabled else "disabled"
-        return ChatOpenAI(
-            model=self._settings.deepseek_model,
-            base_url=self._settings.deepseek_base_url,
-            api_key=SecretStr(self._settings.deepseek_api_key),
+        return build_deepseek_chat_model(
+            self._settings,
             temperature=temperature,
-            top_p=self._settings.llm_top_p,
             max_tokens=max_tokens,
-            timeout=self._settings.deepseek_timeout_seconds,
-            max_retries=0,
-            extra_body={"thinking": {"type": thinking}},
-            http_async_client=self._build_http_client(),
-            # 显式禁用内置 socket 选项，避免 langchain-openai 注入自定义 transport
-            # 时产生“代理被屏蔽”的误导性告警；连接策略完全由 _build_http_client 决定。
-            http_socket_options=(),
         )
 
     async def _invoke(

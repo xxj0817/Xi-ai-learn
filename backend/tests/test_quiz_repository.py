@@ -410,3 +410,72 @@ async def test_held_connection_reads_latest_committed_data() -> None:
                 assert int((await cursor.fetchone())[0]) == 1
     finally:
         await database.close()
+
+
+async def test_save_grounding_is_idempotent_and_detail_returns_it(mysql_db: Database) -> None:
+    repo = QuizRepository(mysql_db)
+    user_id = await create_user(mysql_db)
+    await repo.save_quiz(
+        quiz_id="quiz_grounding_1",
+        user_id=user_id,
+        title="Harness Engineering",
+        summary="摘要",
+        user_input="Harness Engineering",
+        questions=QUESTIONS,
+    )
+    sources = [
+        {
+            "id": "S1",
+            "title": "Harness Engineering",
+            "url": "https://example.com/harness",
+            "snippet": "AI Agent 工程实践",
+            "origin": "web",
+        }
+    ]
+    await repo.save_grounding(
+        quiz_id="quiz_grounding_1",
+        user_id=user_id,
+        sources=sources,
+        grounding={
+            "status": "grounded",
+            "provider": "tavily",
+            "searched_at": "2026-10-28T10:00:00+00:00",
+            "evidence_chars": 12,
+        },
+    )
+    await repo.save_grounding(
+        quiz_id="quiz_grounding_1",
+        user_id=user_id,
+        sources=sources,
+        grounding={
+            "status": "partial",
+            "provider": "tavily",
+            "searched_at": "2026-10-28T10:00:00+00:00",
+            "evidence_chars": 12,
+        },
+    )
+
+    detail = await repo.get_quiz_detail(quiz_id="quiz_grounding_1", user_id=user_id)
+
+    assert detail is not None
+    assert detail["grounding"]["status"] == "partial"
+    assert detail["sources"][0]["id"] == "S1"
+
+
+async def test_detail_without_grounding_returns_defaults(mysql_db: Database) -> None:
+    repo = QuizRepository(mysql_db)
+    user_id = await create_user(mysql_db)
+    await repo.save_quiz(
+        quiz_id="quiz_no_grounding",
+        user_id=user_id,
+        title="历史题库",
+        summary="",
+        user_input="RAG",
+        questions=QUESTIONS,
+    )
+
+    detail = await repo.get_quiz_detail(quiz_id="quiz_no_grounding", user_id=user_id)
+
+    assert detail is not None
+    assert detail["sources"] == []
+    assert detail["grounding"] == {}

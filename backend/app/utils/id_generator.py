@@ -7,3 +7,7 @@ from uuid import uuid4
 
 def new_quiz_id() -> str:
     return f"quiz_{uuid4().hex[:12]}"
+
+
+def new_quiz_task_id() -> str:
+    return f"task_{uuid4().hex}"

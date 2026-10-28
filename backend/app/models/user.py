@@ -5,6 +5,8 @@ from __future__ import annotations
 from pydantic import AliasChoices, BaseModel, Field, field_validator
 from typing import Any
 
+from app.models.quiz import QuizGrounding, QuizSource
+
 _NICKNAME_MAX = 100
 _AVATAR_MAX = 500
 
@@ -103,6 +105,8 @@ class QuizDetail(BaseModel):
     status: str = "completed"
     report: Any | None = None
     created_at: str = ""
+    sources: list[QuizSource] = Field(default_factory=list)
+    grounding: QuizGrounding = Field(default_factory=QuizGrounding)
 
 
 class ProgressRecord(BaseModel):
