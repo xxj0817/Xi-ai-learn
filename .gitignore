@@ -29,3 +29,5 @@ htmlcov/
 # WeChat DevTools
 project.private.config.json
 miniprogram_npm/
+# 用户上传的头像（运行时生成）
+backend/static/avatars/

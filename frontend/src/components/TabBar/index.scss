@@ -1,19 +1,18 @@
 .tab-bar {
   position: fixed;
-  right: 12px;
-  bottom: calc(12px + env(safe-area-inset-bottom));
-  left: 12px;
-  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+  background: #fffbf8;
+  border-top: 1px solid #eddccd;
+  box-shadow: 0 -6px 18px rgba(58, 38, 15, 0.06);
 
   &__inner {
-    border-radius: 18px;
-    border: 1px solid #eddccd;
-    padding: 7px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
-    background: #fffbf8;
-    box-shadow: 0 -6px 18px rgba(58, 38, 15, 0.05);
   }
 
   &__item {

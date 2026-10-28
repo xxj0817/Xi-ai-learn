@@ -49,7 +49,9 @@ class Database:
             password=self._settings.mysql_password,
             db=self._settings.mysql_database,
             charset="utf8mb4",
-            autocommit=False,
+            # 自动提交：避免只读事务长期挂起导致连接复用时读到旧快照。
+            # 需要原子性的多语句写入（如 complete_quiz）显式 begin/commit。
+            autocommit=True,
             minsize=self._settings.mysql_pool_min_size,
             maxsize=self._settings.mysql_pool_max_size,
             pool_recycle=3600,

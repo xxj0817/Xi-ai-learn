@@ -9,7 +9,7 @@ export default defineAppConfig({
   window: {
     backgroundTextStyle: 'light',
     backgroundColor: '#f6f4ef',
-    navigationStyle: 'custom',
+    navigationBarBackgroundColor: '#fffdfa',
     navigationBarTitleText: '鱼皮 AI 闯关学习',
     navigationBarTextStyle: 'black'
   }

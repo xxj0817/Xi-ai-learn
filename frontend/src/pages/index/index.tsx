@@ -4,16 +4,14 @@ import { useMemo, useState } from 'react'
 
 import Icon from '@/components/Icon'
 import ProgressRing from '@/components/ProgressRing'
-import StatusBarSpacer from '@/components/StatusBarSpacer'
 import TabBar from '@/components/TabBar'
 import XpBadge from '@/components/XpBadge'
 import { generateQuiz } from '@/services/api'
 import { useStudyStore } from '@/store/useStudyStore'
 import { useUserStore } from '@/store/useUserStore'
-import type { QuizRecord } from '@/types/quiz'
-import type { QuizHistoryItem } from '@/types/user'
+import type { InProgressQuizItem, QuizHistoryItem } from '@/types/user'
 import { levelAvatarSvg, mascotSvg } from '@/utils/icons'
-import { answeredCount } from '@/utils/judge'
+import { resumeQuizById } from '@/utils/resume'
 import { svgToDataUri } from '@/utils/svg'
 
 import './index.scss'
@@ -24,24 +22,20 @@ const TEXTAREA_PLACEHOLDER =
 export default function IndexPage() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resumingId, setResumingId] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
   const profile = useUserStore((state) => state.profile)
   const history = useUserStore((state) => state.history)
+  const inProgress = useUserStore((state) => state.inProgress)
   const ensureSession = useUserStore((state) => state.ensureSession)
   const startQuiz = useStudyStore((state) => state.startQuiz)
-  const openQuiz = useStudyStore((state) => state.openQuiz)
-  const demoRecords = useStudyStore((state) => state.demoRecords)
 
   useDidShow(() => {
     void ensureSession()
   })
 
   const completedRecords = useMemo(() => history.slice(0, 4), [history])
-  const inProgressRecords = useMemo(
-    () => demoRecords.filter((record) => record.status === 'in_progress'),
-    [demoRecords]
-  )
 
   const handleGenerate = async () => {
     const value = input.trim()
@@ -72,9 +66,19 @@ export default function IndexPage() {
     }
   }
 
-  const handleResume = (record: QuizRecord) => {
-    if (openQuiz(record.quiz.quiz_id)) {
+  const handleResume = async (item: InProgressQuizItem) => {
+    if (resumingId) {
+      return
+    }
+    setResumingId(item.quiz_id)
+    try {
+      await resumeQuizById(item.quiz_id)
       Taro.navigateTo({ url: '/pages/quiz/index' })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '加载闯关进度失败'
+      Taro.showToast({ title: message, icon: 'none' })
+    } finally {
+      setResumingId('')
     }
   }
 
@@ -82,20 +86,22 @@ export default function IndexPage() {
     Taro.navigateTo({ url: `/pages/report/index?quiz_id=${item.quiz_id}` })
   }
 
-  const progressOf = (record: QuizRecord): number => {
-    const total = record.quiz.questions.length || 1
-    return Math.round((answeredCount(record.answers) / total) * 100)
+  const percentOf = (item: InProgressQuizItem): number => {
+    const total = item.question_count || 1
+    return Math.min(100, Math.round((item.answered_count / total) * 100))
   }
 
   return (
     <View className='home-page app-page'>
-      <StatusBarSpacer />
-
       <View className='home-page__body'>
         <View className='home-toolbar'>
           <View className='hello-user'>
             <View className='hello-avatar'>
-              <Text>鱼</Text>
+              {profile?.avatar_url ? (
+                <Image className='hello-avatar__image' src={profile.avatar_url} mode='aspectFill' />
+              ) : (
+                <Text>鱼</Text>
+              )}
             </View>
             <Text className='hello-name'>你好，{profile?.nickname ?? '学习者'}</Text>
           </View>
@@ -165,14 +171,14 @@ export default function IndexPage() {
           </View>
         ) : null}
 
-        {inProgressRecords.length > 0 ? (
+        {inProgress.length > 0 ? (
           <View className='level-list'>
             <Text className='level-list__title'>未完成关卡</Text>
-            {inProgressRecords.map((record, index) => {
-              const percent = progressOf(record)
+            {inProgress.map((item, index) => {
+              const percent = percentOf(item)
               const color = index % 2 === 0 ? '#ff7a2f' : '#4e9fff'
               return (
-                <View className='level-item' key={record.quiz.quiz_id} onClick={() => handleResume(record)}>
+                <View className='level-item' key={item.quiz_id} onClick={() => void handleResume(item)}>
                   <View className='level-item__avatar'>
                     <Image
                       className='level-item__avatar-image'
@@ -181,8 +187,10 @@ export default function IndexPage() {
                     />
                   </View>
                   <View className='level-item__body'>
-                    <Text className='level-item__name'>{record.quiz.title}</Text>
-                    <Text className='level-item__meta'>{record.quiz.questions.length} 题</Text>
+                    <Text className='level-item__name'>{item.title}</Text>
+                    <Text className='level-item__meta'>
+                      已答 {item.answered_count} / {item.question_count} 题
+                    </Text>
                   </View>
                   <ProgressRing percent={percent} size={52} stroke={6} color={color}>
                     <Text className='level-item__percent' style={{ color }}>
@@ -192,6 +200,13 @@ export default function IndexPage() {
                 </View>
               )
             })}
+          </View>
+        ) : null}
+
+        {completedRecords.length === 0 && inProgress.length === 0 ? (
+          <View className='home-empty'>
+            <Text className='home-empty__title'>还没有闯关记录</Text>
+            <Text className='home-empty__desc'>输入一个想学的知识点，生成第一组闯关题就能开始了。</Text>
           </View>
         ) : null}
       </View>

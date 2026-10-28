@@ -272,3 +272,141 @@ async def test_get_quiz_detail_rejects_other_user(mysql_db: Database) -> None:
     )
 
     assert await repo.get_quiz_detail(quiz_id="quiz_1", user_id=other) is None
+PROGRESS_RECORDS = [
+    {"question_id": "q1", "selected": ["A"], "is_correct": True, "duration_ms": 900},
+]
+
+
+async def test_save_progress_upserts_and_lists_in_progress(mysql_db: Database) -> None:
+    repo = QuizRepository(mysql_db)
+    user_id = await create_user(mysql_db)
+    await repo.save_quiz(
+        quiz_id="quiz_progress_1",
+        user_id=user_id,
+        title="未完成关卡",
+        summary="摘要",
+        user_input="RAG",
+        questions=QUESTIONS,
+    )
+
+    assert (
+        await repo.save_progress(
+            quiz_id="quiz_progress_1",
+            user_id=user_id,
+            records=PROGRESS_RECORDS,
+            answered_count=1,
+        )
+        is True
+    )
+    rows = await repo.list_in_progress(user_id=user_id, limit=10)
+
+    assert len(rows) == 1
+    assert rows[0]["quiz_id"] == "quiz_progress_1"
+    assert rows[0]["answered_count"] == 1
+    assert rows[0]["question_count"] == 1
+    assert await repo.get_progress("quiz_progress_1") == PROGRESS_RECORDS
+
+
+async def test_save_progress_rejects_other_user(mysql_db: Database) -> None:
+    repo = QuizRepository(mysql_db)
+    owner_id = await create_user(mysql_db)
+    await repo.save_quiz(
+        quiz_id="quiz_progress_2",
+        user_id=owner_id,
+        title="私有闯关",
+        summary="",
+        user_input="RAG",
+        questions=QUESTIONS,
+    )
+
+    assert (
+        await repo.save_progress(
+            quiz_id="quiz_progress_2",
+            user_id=owner_id + 999,
+            records=PROGRESS_RECORDS,
+            answered_count=1,
+        )
+        is False
+    )
+
+
+async def test_completing_quiz_clears_progress(mysql_db: Database) -> None:
+    repo = QuizRepository(mysql_db)
+    user_id = await create_user(mysql_db)
+    await repo.save_quiz(
+        quiz_id="quiz_progress_3",
+        user_id=user_id,
+        title="未完成关卡",
+        summary="",
+        user_input="RAG",
+        questions=QUESTIONS,
+    )
+    await repo.save_progress(
+        quiz_id="quiz_progress_3",
+        user_id=user_id,
+        records=PROGRESS_RECORDS,
+        answered_count=1,
+    )
+
+    await repo.complete_quiz(
+        quiz_id="quiz_progress_3",
+        user_id=user_id,
+        records=RECORDS,
+        total_questions=1,
+        correct_count=1,
+        accuracy=100.0,
+        report=REPORT,
+        xp_gained=12,
+    )
+    rows = await repo.list_in_progress(user_id=user_id, limit=10)
+
+    assert rows == []
+    assert await repo.get_progress("quiz_progress_3") == []
+
+async def test_held_connection_reads_latest_committed_data() -> None:
+    """回归：只读连接不能长期持有旧快照，否则新写入的关卡查不到。"""
+    from app.core.db import Database
+    from tests.conftest import integration_mysql_settings
+
+    settings = integration_mysql_settings("xi_ai_learn_test")
+    if settings is None:
+        pytest.skip(".env 不存在，跳过 MySQL 集成测试")
+    settings.mysql_pool_min_size = 1
+    settings.mysql_pool_max_size = 2
+
+    database = Database(settings)
+    try:
+        await database.connect()
+    except Exception as exc:  # noqa: BLE001 - 本机无 MySQL 时跳过
+        pytest.skip(f"MySQL 不可用，跳过集成测试：{type(exc).__name__}")
+
+    sql = "SELECT COUNT(*) FROM quiz_sessions WHERE user_id = %s"
+    try:
+        async with database.pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                for table in ("quiz_progress", "answer_records", "reports", "quiz_sessions", "users"):
+                    await cursor.execute(f"DELETE FROM {table}")
+
+        repo = QuizRepository(database)
+        user_repo = UserRepository(database)
+        user = await user_repo.create(openid="openid-stale-read")
+
+        async with database.pool.acquire() as reader:
+            async with reader.cursor() as cursor:
+                await cursor.execute(sql, (user.id,))
+                assert int((await cursor.fetchone())[0]) == 0
+
+            await repo.save_quiz(
+                quiz_id="quiz_stale_read",
+                user_id=user.id,
+                title="新写入的关卡",
+                summary="",
+                user_input="RAG",
+                questions=QUESTIONS,
+            )
+
+            async with reader.cursor() as cursor:
+                await cursor.execute(sql, (user.id,))
+                assert int((await cursor.fetchone())[0]) == 1
+    finally:
+        await database.close()

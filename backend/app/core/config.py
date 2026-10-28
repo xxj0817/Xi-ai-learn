@@ -77,6 +77,11 @@ class Settings(BaseSettings):
     wechat_code2session_url: str = "https://api.weixin.qq.com/sns/jscode2session"
     wechat_timeout_seconds: float = 5.0
 
+    # ===== 静态文件（头像存储） =====
+    # 留空表示使用 backend/static
+    static_dir: str = ""
+    avatar_max_bytes: int = Field(default=2_000_000, ge=1024, le=20_000_000)
+
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:10086",

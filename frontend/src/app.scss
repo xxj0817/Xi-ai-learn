@@ -37,6 +37,7 @@ image {
 
 .app-page {
   min-height: 100vh;
-  padding-bottom: 96px;
+  // 为固定底部导航栏预留空间，避免内容从导航栏下方透出
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
   background: linear-gradient(180deg, $color-screen-top 0%, $color-screen-bottom 100%);
 }

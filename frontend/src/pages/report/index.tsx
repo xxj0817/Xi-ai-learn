@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 
 import Icon from '@/components/Icon'
 import ProgressRing from '@/components/ProgressRing'
-import StatusBarSpacer from '@/components/StatusBarSpacer'
 import TabBar from '@/components/TabBar'
 import XpBadge from '@/components/XpBadge'
 import { fetchQuizDetail } from '@/services/api'
@@ -13,14 +12,23 @@ import type { Report } from '@/types/quiz'
 
 import './index.scss'
 
-function resolveTitle(accuracy: number): string {
-  if (accuracy >= 85) {
-    return '你这局学得很稳'
+const PRAISE_POOLS = {
+  high: ['你这局学得很稳', '知识点已经串起来了', '稳稳通关，节奏很好', '这波理解很到位'],
+  medium: ['这局稳中有进', '大部分都拿下了', '再补几个点就满分', '基础不错，继续加练'],
+  low: ['再来一轮就熟了', '先补最薄弱的点', '这局有点吃力，别急', '多刷一遍会好很多']
+}
+
+function pickIndex(seed: string, length: number): number {
+  let hash = 0
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) % 100_000
   }
-  if (accuracy >= 60) {
-    return '这局稳中有进'
-  }
-  return '再来一轮就熟了'
+  return hash % length
+}
+
+function resolveTitle(accuracy: number, seed: string): string {
+  const pool = accuracy >= 85 ? PRAISE_POOLS.high : accuracy >= 60 ? PRAISE_POOLS.medium : PRAISE_POOLS.low
+  return pool[pickIndex(seed, pool.length)]
 }
 
 export default function ReportPage() {
@@ -78,7 +86,6 @@ export default function ReportPage() {
   if (loading) {
     return (
       <View className='report-page app-page'>
-        <StatusBarSpacer />
         <View className='loading-mask'>
           <View className='loading-card'>
             <View className='loading-spinner' />
@@ -92,7 +99,6 @@ export default function ReportPage() {
   if (failed || !report) {
     return (
       <View className='report-page app-page'>
-        <StatusBarSpacer />
         <View className='report-page__body'>
           <View className='report-nav'>
             <View className='report-nav__back' onClick={handleAgain}>
@@ -124,7 +130,6 @@ export default function ReportPage() {
 
   return (
     <View className='report-page app-page'>
-      <StatusBarSpacer />
 
       <View className='report-page__body'>
         <View className='report-nav'>
@@ -139,16 +144,20 @@ export default function ReportPage() {
           <XpBadge value={`+${report.xp_gained ?? 0} XP`} showIcon={false} />
         </View>
 
-        <Text className='report-title'>{resolveTitle(report.accuracy)}</Text>
+        <Text className='report-title'>{resolveTitle(report.accuracy, quizId || title)}</Text>
         <Text className='report-subtitle'>先看结果，再看错因，最后给你下一步建议。</Text>
 
         <View className='report-chips'>
-          <View className='report-chip report-chip--orange'>
-            <Icon name='star' size={12} color='#ca6329' />
+          <View className='report-chip report-chip--green'>
+            <Icon name='star' size={12} color='#2b8c69' />
             <Text>掌握度 +1</Text>
           </View>
-          <View className='report-chip report-chip--green'>
-            <Icon name='trendDown' size={12} color='#2b8c69' />
+          <View className={wrongCount > 0 ? 'report-chip report-chip--red' : 'report-chip report-chip--green'}>
+            <Icon
+              name={wrongCount > 0 ? 'trendDown' : 'checkCircle'}
+              size={12}
+              color={wrongCount > 0 ? '#b64f40' : '#2b8c69'}
+            />
             <Text>{wrongCount > 0 ? `错题 -${wrongCount}` : '全对通关'}</Text>
           </View>
         </View>

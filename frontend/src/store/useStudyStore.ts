@@ -2,8 +2,7 @@ import Taro from '@tarojs/taro'
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-import { buildDemoRecords } from '@/data/demoQuizzes'
-import type { AnswerState, Quiz, QuizRecord, Report } from '@/types/quiz'
+import type { AnswerState, Quiz, Report } from '@/types/quiz'
 
 const taroStorage = {
   getItem: (name: string): string | null => {
@@ -36,14 +35,11 @@ interface StudyState {
   currentIndex: number
   answers: Record<string, AnswerState>
   report: Report | null
-  demoRecords: QuizRecord[]
-  seeded: boolean
-  seedDemoData: () => void
   startQuiz: (quiz: Quiz) => void
+  resumeQuiz: (quiz: Quiz, answers: Record<string, AnswerState>, index?: number) => void
   submitAnswer: (answer: AnswerState) => void
   setIndex: (index: number) => void
   completeQuiz: (report: Report) => void
-  openQuiz: (quizId: string) => boolean
   resetCurrent: () => void
 }
 
@@ -54,35 +50,23 @@ export const useStudyStore = create<StudyState>()(
       currentIndex: 0,
       answers: {},
       report: null,
-      demoRecords: [],
-      seeded: false,
 
-      seedDemoData: () =>
-        set((state) => (state.seeded ? {} : { seeded: true, demoRecords: buildDemoRecords() })),
+      startQuiz: (quiz) => {
+        const same = get().quiz?.quiz_id === quiz.quiz_id
+        set({
+          quiz,
+          currentIndex: same ? get().currentIndex : 0,
+          answers: same ? get().answers : {},
+          report: null
+        })
+      },
 
-      startQuiz: (quiz) =>
-        set((state) => {
-          const existing = state.demoRecords.find((item) => item.quiz.quiz_id === quiz.quiz_id)
-          const record: QuizRecord = existing
-            ? { ...existing, quiz, updatedAt: Date.now() }
-            : {
-                quiz,
-                answers: {},
-                currentIndex: 0,
-                status: 'in_progress',
-                createdAt: Date.now(),
-                updatedAt: Date.now()
-              }
-
-          return {
-            quiz,
-            currentIndex: existing?.currentIndex ?? 0,
-            answers: existing?.answers ?? {},
-            report: null,
-            demoRecords: state.demoRecords.some((item) => item.quiz.quiz_id === quiz.quiz_id)
-              ? state.demoRecords.map((item) => (item.quiz.quiz_id === quiz.quiz_id ? record : item))
-              : [record, ...state.demoRecords]
-          }
+      resumeQuiz: (quiz, answers, index = 0) =>
+        set({
+          quiz,
+          answers,
+          currentIndex: Math.max(0, Math.min(index, quiz.questions.length - 1)),
+          report: null
         }),
 
       submitAnswer: (answer) =>
@@ -101,47 +85,16 @@ export const useStudyStore = create<StudyState>()(
           return { currentIndex: Math.max(0, Math.min(index, state.quiz.questions.length - 1)) }
         }),
 
-      completeQuiz: (report) =>
-        set((state) => {
-          if (!state.quiz) {
-            return {}
-          }
-          const quizId = state.quiz.quiz_id
-          return {
-            report,
-            demoRecords: state.demoRecords.map((item) =>
-              item.quiz.quiz_id === quizId
-                ? { ...item, answers: state.answers, status: 'completed' as const, report, updatedAt: Date.now() }
-                : item
-            )
-          }
-        }),
-
-      openQuiz: (quizId) => {
-        const state = get()
-        const record = state.demoRecords.find((item) => item.quiz.quiz_id === quizId)
-        if (!record) {
-          return false
-        }
-        set({
-          quiz: record.quiz,
-          currentIndex: record.currentIndex,
-          answers: record.answers,
-          report: record.report ?? null
-        })
-        return true
-      },
+      completeQuiz: (report) => set({ report }),
 
       resetCurrent: () => set({ quiz: null, currentIndex: 0, answers: {}, report: null })
     }),
     {
       name: 'xi-ai-learn-study',
       storage: createJSONStorage(() => taroStorage),
-      version: 3,
+      version: 4,
       skipHydration: true,
       partialize: (state) => ({
-        demoRecords: state.demoRecords,
-        seeded: state.seeded,
         quiz: state.quiz,
         currentIndex: state.currentIndex,
         answers: state.answers,

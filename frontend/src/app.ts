@@ -8,12 +8,9 @@ import './app.scss'
 
 function App({ children }: PropsWithChildren) {
   useLaunch(() => {
-    const seed = () => useStudyStore.getState().seedDemoData()
     const result = useStudyStore.persist.rehydrate() as unknown
     if (result && typeof (result as Promise<void>).then === 'function') {
-      ;(result as Promise<void>).then(seed, seed)
-    } else {
-      seed()
+      void (result as Promise<void>).catch(() => undefined)
     }
     void useUserStore.getState().ensureSession()
   })

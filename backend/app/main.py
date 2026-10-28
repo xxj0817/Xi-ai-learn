@@ -5,11 +5,13 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1.router import api_router
@@ -29,6 +31,13 @@ logger = logging.getLogger(__name__)
 
 def _envelope(code: int, message: str, status_code: int) -> JSONResponse:
     return JSONResponse(status_code=status_code, content={"code": code, "message": message, "data": None})
+
+
+def _resolve_static_root(settings: Settings) -> Path:
+    configured = settings.static_dir.strip()
+    root = Path(configured).expanduser() if configured else Path(__file__).resolve().parents[1] / "static"
+    (root / "avatars").mkdir(parents=True, exist_ok=True)
+    return root
 
 
 def create_app(
@@ -80,6 +89,7 @@ def create_app(
     app.state.wechat_client = wechat_client or build_wechat_client(settings)
     app.state.user_repo = user_repo
     app.state.quiz_repo = quiz_repo
+    app.state.static_root = _resolve_static_root(settings)
 
     app.add_middleware(
         CORSMiddleware,
@@ -102,6 +112,7 @@ def create_app(
         return await call_next(request)
 
     app.include_router(api_router, prefix=settings.api_v1_prefix)
+    app.mount("/static", StaticFiles(directory=str(app.state.static_root)), name="static")
 
     @app.exception_handler(AppError)
     async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:

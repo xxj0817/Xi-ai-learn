@@ -1,16 +1,30 @@
-import { Text, View } from '@tarojs/components'
+import { Button, Image, Input, Text, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
+import { useEffect, useState } from 'react'
 
 import EmptyState from '@/components/EmptyState'
-import Icon from '@/components/Icon'
 import RecordRow from '@/components/RecordRow'
-import StatusBarSpacer from '@/components/StatusBarSpacer'
 import TabBar from '@/components/TabBar'
 import XpBadge from '@/components/XpBadge'
 import { useUserStore } from '@/store/useUserStore'
 import type { QuizHistoryItem } from '@/types/user'
 
 import './index.scss'
+
+function readAsBase64(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    Taro.getFileSystemManager().readFile({
+      filePath,
+      encoding: 'base64',
+      success: (result) => resolve(String(result.data)),
+      fail: () => reject(new Error('读取头像文件失败'))
+    })
+  })
+}
+
+function contentTypeOf(filePath: string): string {
+  return /\.png$/i.test(filePath) ? 'image/png' : 'image/jpeg'
+}
 
 export default function ProfilePage() {
   const profile = useUserStore((state) => state.profile)
@@ -19,10 +33,19 @@ export default function ProfilePage() {
   const error = useUserStore((state) => state.error)
   const ensureSession = useUserStore((state) => state.ensureSession)
   const rename = useUserStore((state) => state.rename)
+  const changeAvatar = useUserStore((state) => state.changeAvatar)
+
+  const [nicknameDraft, setNicknameDraft] = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [savingNickname, setSavingNickname] = useState(false)
 
   useDidShow(() => {
     void ensureSession()
   })
+
+  useEffect(() => {
+    setNicknameDraft(profile?.nickname ?? '')
+  }, [profile?.nickname])
 
   const recent = history.slice(0, 5)
 
@@ -30,41 +53,61 @@ export default function ProfilePage() {
     Taro.navigateTo({ url: `/pages/report/index?quiz_id=${item.quiz_id}` })
   }
 
-  const handleRename = async () => {
+  const handleChooseAvatar = async (tempPath: string) => {
+    if (!tempPath || avatarUploading) {
+      return
+    }
+    if (!loggedIn) {
+      Taro.showToast({ title: '登录后才能设置头像', icon: 'none' })
+      return
+    }
+    setAvatarUploading(true)
+    try {
+      const base64 = await readAsBase64(tempPath)
+      const ok = await changeAvatar(base64, contentTypeOf(tempPath))
+      Taro.showToast({ title: ok ? '头像已更新' : '头像更新失败', icon: 'none' })
+    } catch (uploadError) {
+      const message = uploadError instanceof Error ? uploadError.message : '头像更新失败'
+      Taro.showToast({ title: message, icon: 'none' })
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  const handleSaveNickname = async () => {
+    const value = nicknameDraft.trim()
     if (!loggedIn) {
       Taro.showToast({ title: '登录后才能修改昵称', icon: 'none' })
       return
     }
-    const option = {
-      title: '修改昵称',
-      editable: true,
-      placeholderText: '请输入新的昵称',
-      content: profile?.nickname ?? '',
-      confirmText: '保存',
-      cancelText: '取消'
-    } as unknown as Taro.showModal.Option
-    const result = (await Taro.showModal(option)) as unknown as { confirm: boolean; content?: string }
-    if (!result.confirm) {
-      return
-    }
-    const value = (result.content ?? '').trim()
     if (!value) {
       Taro.showToast({ title: '昵称不能为空', icon: 'none' })
       return
     }
-    const ok = await rename(value)
-    Taro.showToast({ title: ok ? '昵称已更新' : '修改失败，请重试', icon: 'none' })
+    if (value === profile?.nickname) {
+      Taro.showToast({ title: '昵称没有变化', icon: 'none' })
+      return
+    }
+    setSavingNickname(true)
+    try {
+      const ok = await rename(value)
+      Taro.showToast({ title: ok ? '昵称已更新' : '修改失败，请重试', icon: 'none' })
+    } finally {
+      setSavingNickname(false)
+    }
   }
 
   return (
     <View className='profile-page app-page'>
-      <StatusBarSpacer />
-
       <View className='profile-page__body'>
         <View className='profile-toolbar'>
           <View className='hello-user'>
             <View className='hello-avatar'>
-              <Text>鱼</Text>
+              {profile?.avatar_url ? (
+                <Image className='hello-avatar__image' src={profile.avatar_url} mode='aspectFill' />
+              ) : (
+                <Text>鱼</Text>
+              )}
             </View>
             <Text className='hello-name'>你好，{profile?.nickname ?? '学习者'}</Text>
           </View>
@@ -75,6 +118,40 @@ export default function ProfilePage() {
         <Text className='profile-subtitle'>
           {loggedIn ? '学习记录已同步到你的微信账号。' : '登录后可同步学习记录与经验值。'}
         </Text>
+
+        <View className='profile-account'>
+          <Button
+            className='profile-account__avatar'
+            openType='chooseAvatar'
+            onChooseAvatar={(event) => {
+              void handleChooseAvatar(event.detail.avatarUrl)
+            }}
+          >
+            {profile?.avatar_url ? (
+              <Image className='profile-account__avatar-image' src={profile.avatar_url} mode='aspectFill' />
+            ) : (
+              <Text className='profile-account__avatar-text'>{avatarUploading ? '…' : '鱼'}</Text>
+            )}
+          </Button>
+
+          <View className='profile-account__form'>
+            <Text className='profile-account__label'>头像与昵称</Text>
+            <Input
+              className='profile-account__input'
+              type='nickname'
+              value={nicknameDraft}
+              placeholder='点击获取微信昵称'
+              maxlength={20}
+              onInput={(event) => setNicknameDraft(event.detail.value)}
+            />
+            <View className='profile-account__actions'>
+              <Button className='profile-account__save' onClick={() => void handleSaveNickname()}>
+                {savingNickname ? '保存中…' : '保存昵称'}
+              </Button>
+              <Text className='profile-account__hint'>点击左侧头像可从微信选择</Text>
+            </View>
+          </View>
+        </View>
 
         <View className='profile-metrics'>
           <View className='metric-card'>
@@ -93,11 +170,6 @@ export default function ProfilePage() {
             <Text className='metric-card__value'>{profile?.average_accuracy ?? 0}%</Text>
             <Text className='metric-card__label'>平均正确率</Text>
           </View>
-        </View>
-
-        <View className='profile-rename' onClick={handleRename}>
-          <Icon name='edit' size={14} color='#cb6326' />
-          <Text>修改昵称</Text>
         </View>
 
         {error ? <Text className='profile-error'>{error}</Text> : null}

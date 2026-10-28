@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 
-import { fetchHistory, fetchProfile, updateNickname } from '@/services/api'
+import { fetchHistory, fetchInProgress, fetchProfile, updateNickname, uploadAvatar } from '@/services/api'
 import { getCachedUser, isLoggedIn, setCachedUser } from '@/services/auth'
 import { loginWithWeChat } from '@/services/request'
-import type { QuizHistoryItem, UserProfile } from '@/types/user'
+import type { InProgressQuizItem, QuizHistoryItem, UserProfile } from '@/types/user'
 
 const PAGE_SIZE = 20
 
@@ -13,6 +13,7 @@ interface UserState {
   history: QuizHistoryItem[]
   historyTotal: number
   historyPage: number
+  inProgress: InProgressQuizItem[]
   loading: boolean
   historyLoading: boolean
   error: string
@@ -20,13 +21,24 @@ interface UserState {
   ensureSession: () => Promise<void>
   loadProfile: () => Promise<void>
   loadHistory: (page?: number, append?: boolean) => Promise<void>
+  loadInProgress: () => Promise<void>
   rename: (nickname: string) => Promise<boolean>
+  changeAvatar: (base64: string, contentType: string) => Promise<boolean>
   reset: () => void
 }
 
 const cachedUser = getCachedUser()
 let lastLoginFailAt = 0
 const LOGIN_RETRY_INTERVAL = 30_000
+
+function cacheProfile(profile: UserProfile): void {
+  setCachedUser({
+    id: profile.id,
+    nickname: profile.nickname,
+    avatar_url: profile.avatar_url,
+    total_xp: profile.total_xp
+  })
+}
 
 export const useUserStore = create<UserState>()((set, get) => ({
   loggedIn: isLoggedIn(),
@@ -44,6 +56,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
   history: [],
   historyTotal: 0,
   historyPage: 1,
+  inProgress: [],
   loading: false,
   historyLoading: false,
   error: '',
@@ -83,8 +96,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
         return
       }
     }
-    await get().loadProfile()
-    await get().loadHistory(1)
+    await Promise.all([get().loadProfile(), get().loadHistory(1), get().loadInProgress()])
   },
 
   loadProfile: async () => {
@@ -94,12 +106,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
     set({ loading: true })
     try {
       const profile = await fetchProfile()
-      setCachedUser({
-        id: profile.id,
-        nickname: profile.nickname,
-        avatar_url: profile.avatar_url,
-        total_xp: profile.total_xp
-      })
+      cacheProfile(profile)
       set({ profile, loading: false, error: '' })
     } catch (error) {
       const message = error instanceof Error ? error.message : '加载档案失败'
@@ -127,6 +134,18 @@ export const useUserStore = create<UserState>()((set, get) => ({
     }
   },
 
+  loadInProgress: async () => {
+    if (!get().loggedIn) {
+      return
+    }
+    try {
+      const result = await fetchInProgress()
+      set({ inProgress: result.items })
+    } catch (error) {
+      console.warn('加载未完成关卡失败', error)
+    }
+  },
+
   rename: async (nickname) => {
     const trimmed = nickname.trim()
     if (!trimmed) {
@@ -134,17 +153,26 @@ export const useUserStore = create<UserState>()((set, get) => ({
     }
     try {
       const profile = await updateNickname(trimmed)
-      setCachedUser({
-        id: profile.id,
-        nickname: profile.nickname,
-        avatar_url: profile.avatar_url,
-        total_xp: profile.total_xp
-      })
+      cacheProfile(profile)
       set({ profile, error: '' })
       return true
     } catch (error) {
       const message = error instanceof Error ? error.message : '修改昵称失败'
       console.warn('修改昵称失败', error)
+      set({ error: message })
+      return false
+    }
+  },
+
+  changeAvatar: async (base64, contentType) => {
+    try {
+      const profile = await uploadAvatar(base64, contentType)
+      cacheProfile(profile)
+      set({ profile, error: '' })
+      return true
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '头像上传失败'
+      console.warn('头像上传失败', error)
       set({ error: message })
       return false
     }
@@ -157,6 +185,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
       history: [],
       historyTotal: 0,
       historyPage: 1,
+      inProgress: [],
       error: ''
     })
 }))

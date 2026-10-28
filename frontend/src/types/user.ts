@@ -1,3 +1,5 @@
+import type { AnswerState, Question, Report } from './quiz'
+
 export interface UserPublic {
   id: number
   nickname: string
@@ -35,13 +37,27 @@ export interface QuizHistoryPage {
   page_size: number
 }
 
+export interface InProgressQuizItem {
+  quiz_id: string
+  title: string
+  question_count: number
+  answered_count: number
+  updated_at: string
+}
+
+export interface InProgressQuizList {
+  items: InProgressQuizItem[]
+}
+
 export interface QuizDetail {
   quiz_id: string
   title: string
   summary: string
   user_input: string
-  questions: import('./quiz').Question[]
-  answer_records: import('./quiz').AnswerState[] | unknown[]
-  report: import('./quiz').Report | null
+  questions: Question[]
+  answer_records: AnswerState[] | unknown[]
+  progress: AnswerState[] | unknown[]
+  status: 'completed' | 'in_progress'
+  report: Report | null
   created_at: string
 }

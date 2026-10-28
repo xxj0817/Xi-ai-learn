@@ -228,6 +228,7 @@ class FakeQuizRepository:
         self.completions: dict[str, dict[str, Any]] = {}
         self.completed: list[str] = []
         self.reports: dict[str, dict[str, Any]] = {}
+        self.progress: dict[str, list[dict[str, Any]]] = {}
         self.xp_by_user: dict[int, int] = {}
         self._user_repository = user_repository
 
@@ -274,6 +275,7 @@ class FakeQuizRepository:
         }
         self.completed.append(quiz_id)
         self.reports[quiz_id] = report
+        self.progress.pop(quiz_id, None)
         self.xp_by_user[user_id] = self.xp_by_user.get(user_id, 0) + xp_gained
         if self._user_repository is not None:
             user = await self._user_repository.get_by_id(user_id)
@@ -314,6 +316,40 @@ class FakeQuizRepository:
         ]
         return items, total
 
+    async def save_progress(
+        self,
+        *,
+        quiz_id: str,
+        user_id: int,
+        records: list[dict[str, Any]],
+        answered_count: int,
+    ) -> bool:
+        quiz = self.quizzes.get(quiz_id)
+        if quiz is None or quiz["user_id"] != user_id:
+            return False
+        if quiz_id in self.completions:
+            return False
+        self.progress[quiz_id] = list(records)
+        return True
+
+    async def get_progress(self, quiz_id: str) -> list[dict[str, Any]]:
+        return list(self.progress.get(quiz_id, []))
+
+    async def list_in_progress(self, *, user_id: int, limit: int) -> list[dict[str, Any]]:
+        rows = [
+            {
+                "quiz_id": quiz_id,
+                "title": quiz["title"],
+                "question_count": len(quiz["questions"]),
+                "answered_count": len(self.progress.get(quiz_id, [])),
+                "updated_at": "2026-10-27 11:00:00",
+            }
+            for quiz_id, quiz in self.quizzes.items()
+            if quiz["user_id"] == user_id and quiz_id not in self.completions
+        ]
+        rows.reverse()
+        return rows[:limit]
+
     async def get_quiz_detail(self, *, quiz_id: str, user_id: int) -> dict[str, Any] | None:
         quiz = self.quizzes.get(quiz_id)
         completion = self.completions.get(quiz_id)
@@ -327,6 +363,8 @@ class FakeQuizRepository:
             "questions": quiz["questions"],
             "created_at": "2026-10-27 10:00:00",
             "answer_records": completion["records"] if completion else [],
+            "progress": [] if completion else list(self.progress.get(quiz_id, [])),
+            "status": "completed" if completion else "in_progress",
             "report": self.reports.get(quiz_id),
         }
 

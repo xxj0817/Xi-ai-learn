@@ -1,7 +1,12 @@
 import { request } from '@/services/request'
-import type { GenerateQuizPayload, GenerateReportPayload } from '@/types/api'
+import type { AnswerRecordPayload, GenerateQuizPayload, GenerateReportPayload } from '@/types/api'
 import type { Quiz, Report } from '@/types/quiz'
-import type { QuizDetail, QuizHistoryPage, UserProfile } from '@/types/user'
+import type {
+  InProgressQuizList,
+  QuizDetail,
+  QuizHistoryPage,
+  UserProfile
+} from '@/types/user'
 
 export function generateQuiz(payload: GenerateQuizPayload): Promise<Quiz> {
   return request<Quiz>({
@@ -35,4 +40,30 @@ export function fetchHistory(page = 1, pageSize = 20): Promise<QuizHistoryPage> 
 
 export function fetchQuizDetail(quizId: string): Promise<QuizDetail> {
   return request<QuizDetail>({ url: `/user/quizzes/${quizId}` })
+}
+
+export function fetchInProgress(): Promise<InProgressQuizList> {
+  return request<InProgressQuizList>({ url: '/user/quizzes/in-progress' })
+}
+
+export function saveQuizProgress(
+  quizId: string,
+  records: AnswerRecordPayload[]
+): Promise<{ quiz_id: string; answered_count: number }> {
+  return request<{ quiz_id: string; answered_count: number }>({
+    url: `/user/quizzes/${quizId}/progress`,
+    method: 'PUT',
+    data: { records }
+  })
+}
+
+export function uploadAvatar(
+  data: string,
+  contentType: string
+): Promise<UserProfile> {
+  return request<UserProfile>({
+    url: '/user/avatar',
+    method: 'POST',
+    data: { data, content_type: contentType }
+  })
 }

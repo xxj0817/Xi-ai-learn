@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import AliasChoices, BaseModel, Field, field_validator
 from typing import Any
 
 _NICKNAME_MAX = 100
@@ -99,5 +99,50 @@ class QuizDetail(BaseModel):
     user_input: str = ""
     questions: list[Any] = Field(default_factory=list)
     answer_records: list[Any] = Field(default_factory=list)
+    progress: list[Any] = Field(default_factory=list)
+    status: str = "completed"
     report: Any | None = None
     created_at: str = ""
+
+
+class ProgressRecord(BaseModel):
+    """单题答题进度，字段与前端 AnswerState 对齐。"""
+
+    question_id: str = Field(min_length=1, max_length=64)
+    # 前端上报答题记录时用 selected_answers（与报告接口一致），进度接口用 selected；
+    # 两种字段名都接受，避免作答内容丢失。
+    selected: list[str] = Field(
+        default_factory=list,
+        max_length=20,
+        validation_alias=AliasChoices("selected", "selected_answers"),
+    )
+    is_correct: bool = False
+    duration_ms: int = Field(default=0, ge=0, le=86_400_000)
+
+
+class QuizProgressRequest(BaseModel):
+    records: list[ProgressRecord] = Field(default_factory=list, max_length=200)
+
+
+class QuizProgressAck(BaseModel):
+    quiz_id: str
+    answered_count: int
+
+
+class InProgressQuizItem(BaseModel):
+    quiz_id: str
+    title: str
+    question_count: int
+    answered_count: int
+    updated_at: str
+
+
+class InProgressQuizList(BaseModel):
+    items: list[InProgressQuizItem] = Field(default_factory=list)
+
+
+class AvatarUploadRequest(BaseModel):
+    """小程序 chooseAvatar 拿到的本地文件按 base64 上传。"""
+
+    data: str = Field(min_length=1, max_length=12_000_000)
+    content_type: str = Field(default="image/png", max_length=64)

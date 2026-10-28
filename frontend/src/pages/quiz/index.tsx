@@ -5,15 +5,16 @@ import { useEffect, useRef, useState } from 'react'
 import XpBadge from '@/components/XpBadge'
 import Icon from '@/components/Icon'
 import OptionCard, { type OptionState } from '@/components/OptionCard'
-import StatusBarSpacer from '@/components/StatusBarSpacer'
-import { generateReport } from '@/services/api'
+import { generateReport, saveQuizProgress } from '@/services/api'
 import { useStudyStore } from '@/store/useStudyStore'
 import { useUserStore } from '@/store/useUserStore'
-import { correctAnswerLabel, isAnswerCorrect } from '@/utils/judge'
+import { isAnswerCorrect } from '@/utils/judge'
+import { toAnswerRecords } from '@/utils/progress'
 
 import './index.scss'
 
 const XP_PER_CORRECT = 2
+const NAV_TITLE_MAX = 10
 
 export default function QuizPage() {
   const quiz = useStudyStore((state) => state.quiz)
@@ -38,6 +39,25 @@ export default function QuizPage() {
     setPending([])
     startTimeRef.current = Date.now()
   }, [currentIndex])
+
+  useEffect(() => {
+    if (!quiz) {
+      return
+    }
+    const title = quiz.title.trim()
+    Taro.setNavigationBarTitle({
+      title: title ? title.slice(0, NAV_TITLE_MAX) : '闯关答题'
+    })
+  }, [quiz])
+
+  useEffect(() => {
+    if (!quiz || Object.keys(answers).length === 0) {
+      return
+    }
+    void saveQuizProgress(quiz.quiz_id, toAnswerRecords(answers)).catch((error) => {
+      console.warn('同步答题进度失败', error)
+    })
+  }, [answers, quiz])
 
   if (!quiz) {
     return null
@@ -100,8 +120,10 @@ export default function QuizPage() {
         })
       })
       completeQuiz(report)
-      void useUserStore.getState().loadProfile()
-      void useUserStore.getState().loadHistory(1)
+      const userState = useUserStore.getState()
+      void userState.loadProfile()
+      void userState.loadHistory(1)
+      void userState.loadInProgress()
       Taro.redirectTo({ url: '/pages/report/index' })
     } catch (error) {
       const message = error instanceof Error ? error.message : '报告生成失败，请重试'
@@ -158,7 +180,6 @@ export default function QuizPage() {
 
   return (
     <View className='quiz-page'>
-      <StatusBarSpacer />
 
       <View className='quiz-page__body'>
         <View className='quiz-nav'>
@@ -177,7 +198,7 @@ export default function QuizPage() {
           </View>
           <View className='quiz-progress__meta'>
             <Text>
-              第 {safeIndex + 1} 关 / 共 {total} 关
+              第 {safeIndex + 1} 题 / 共 {total} 题
             </Text>
             <Text>答对 {correctCount} 题</Text>
           </View>
@@ -215,7 +236,7 @@ export default function QuizPage() {
               <Text>{isCorrect ? '答对啦' : '答错了'}</Text>
             </View>
             <Text className='result-tip__right'>
-              {isCorrect ? `+${XP_PER_CORRECT} XP` : `正确答案：${correctAnswerLabel(question)}`}
+              {isCorrect ? `+${XP_PER_CORRECT} XP` : '+0 XP'}
             </Text>
           </View>
         ) : null}

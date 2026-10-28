@@ -54,6 +54,19 @@ class QuizRepositoryProtocol(Protocol):
         xp_gained: int,
     ) -> bool: ...
 
+    async def save_progress(
+        self,
+        *,
+        quiz_id: str,
+        user_id: int,
+        records: list[dict[str, Any]],
+        answered_count: int,
+    ) -> bool: ...
+
+    async def list_in_progress(
+        self, *, user_id: int, limit: int
+    ) -> list[dict[str, Any]]: ...
+
 
 class QuizRepository:
     def __init__(self, db: Database) -> None:
@@ -112,6 +125,7 @@ class QuizRepository:
         awarded = False
         async with self._db.pool.acquire() as conn:
             try:
+                await conn.begin()
                 async with conn.cursor(aiomysql.Cursor) as cursor:
                     await cursor.execute(
                         "INSERT INTO answer_records "
@@ -135,6 +149,11 @@ class QuizRepository:
                                 (xp_gained, user_id),
                             )
                         awarded = True
+
+                    # 完成即清理残留进度，避免出现在「未完成关卡」中
+                    await cursor.execute(
+                        "DELETE FROM quiz_progress WHERE quiz_id = %s", (quiz_id,)
+                    )
                 await conn.commit()
             except Exception:
                 await conn.rollback()
@@ -237,6 +256,76 @@ class QuizRepository:
         ]
         return items, total
 
+    async def save_progress(
+        self,
+        *,
+        quiz_id: str,
+        user_id: int,
+        records: list[dict[str, Any]],
+        answered_count: int,
+    ) -> bool:
+        """保存答题进度；返回 False 表示该闯关不属于当前用户。"""
+        async with self._db.pool.acquire() as conn:
+            try:
+                async with conn.cursor(aiomysql.Cursor) as cursor:
+                    await cursor.execute(
+                        "SELECT 1 FROM quiz_sessions WHERE quiz_id = %s AND user_id = %s",
+                        (quiz_id, user_id),
+                    )
+                    if await cursor.fetchone() is None:
+                        return False
+
+                    await cursor.execute(
+                        "INSERT INTO quiz_progress (quiz_id, user_id, records_json, answered_count) "
+                        "VALUES (%s, %s, %s, %s) AS incoming "
+                        "ON DUPLICATE KEY UPDATE "
+                        "records_json = incoming.records_json, "
+                        "answered_count = incoming.answered_count, "
+                        "updated_at = CURRENT_TIMESTAMP",
+                        (quiz_id, user_id, _dumps(records), answered_count),
+                    )
+                await conn.commit()
+            except Exception:
+                await conn.rollback()
+                raise
+        return True
+
+    async def get_progress(self, quiz_id: str) -> list[dict[str, Any]]:
+        async with self._db.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute(
+                    "SELECT records_json FROM quiz_progress WHERE quiz_id = %s", (quiz_id,)
+                )
+                row = await cursor.fetchone()
+        return [] if row is None else (_loads(row[0]) or [])
+
+    async def list_in_progress(self, *, user_id: int, limit: int) -> list[dict[str, Any]]:
+        async with self._db.pool.acquire() as conn:
+            async with conn.cursor(aiomysql.Cursor) as cursor:
+                await cursor.execute(
+                    "SELECT s.quiz_id, s.title, JSON_LENGTH(s.questions_json), "
+                    "COALESCE(p.answered_count, 0), COALESCE(p.updated_at, s.created_at) "
+                    "FROM quiz_sessions s "
+                    "LEFT JOIN answer_records a ON a.quiz_id = s.quiz_id "
+                    "LEFT JOIN quiz_progress p ON p.quiz_id = s.quiz_id "
+                    "WHERE s.user_id = %s AND a.id IS NULL "
+                    "ORDER BY COALESCE(p.updated_at, s.created_at) DESC, s.id DESC "
+                    "LIMIT %s",
+                    (user_id, limit),
+                )
+                rows = await cursor.fetchall()
+
+        return [
+            {
+                "quiz_id": row[0],
+                "title": row[1] or "未命名闯关",
+                "question_count": int(row[2] or 0),
+                "answered_count": int(row[3] or 0),
+                "updated_at": row[4],
+            }
+            for row in rows
+        ]
+
     async def get_quiz_detail(self, *, quiz_id: str, user_id: int) -> dict[str, Any] | None:
         async with self._db.pool.acquire() as conn:
             async with conn.cursor(aiomysql.Cursor) as cursor:
@@ -252,6 +341,7 @@ class QuizRepository:
 
         records = await self.get_answer_records(quiz_id)
         report = await self.get_report(quiz_id)
+        progress = await self.get_progress(quiz_id)
 
         return {
             "quiz_id": row[0],
@@ -261,5 +351,7 @@ class QuizRepository:
             "questions": _loads(row[4]) or [],
             "created_at": row[5],
             "answer_records": records or [],
+            "progress": progress,
+            "status": "completed" if records else "in_progress",
             "report": report,
         }

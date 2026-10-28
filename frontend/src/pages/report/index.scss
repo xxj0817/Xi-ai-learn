@@ -44,6 +44,8 @@
   background: $color-panel;
 
   &__topic {
+    flex: 1;
+    min-width: 0;
     font-size: 14px;
     font-weight: 800;
     color: #7f6347;
@@ -95,6 +97,12 @@
     color: #2b8c69;
     background: #ecf8f1;
     border: 1px solid #b5dfc9;
+  }
+
+  &--red {
+    color: #b64f40;
+    background: #fdeeec;
+    border: 1px solid #f3c4bd;
   }
 }
 

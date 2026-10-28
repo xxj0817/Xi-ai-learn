@@ -23,26 +23,42 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .hello-avatar {
+  position: relative;
+  flex-shrink: 0;
   width: 24px;
   height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   background: #fff0e4;
   border: 1px solid #f1d7c0;
   color: #cc6326;
   font-size: 12px;
   font-weight: 800;
+
+  &__image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
 }
 
 .hello-name {
+  min-width: 0;
   font-size: 14px;
   color: #7f6347;
   font-weight: 800;
+  @include ellipsis(1);
 }
 
 .profile-title {
@@ -103,6 +119,90 @@
   color: $color-orange-deep;
   font-size: 13px;
   font-weight: 700;
+}
+
+.profile-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 20px;
+  border: 1px solid $color-line-soft;
+  background: $color-panel;
+
+  &__avatar {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff0e4;
+    border: 1px solid #f1d7c0;
+  }
+
+  &__avatar-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+
+  &__avatar-text {
+    color: $color-orange-deep;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  &__form {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-muted;
+  }
+
+  &__input {
+    width: 100%;
+    height: 34px;
+    margin-top: 4px;
+    padding: 0 10px;
+    border-radius: 12px;
+    border: 1px solid #f0dcc9;
+    background: #fffdfa;
+    font-size: 14px;
+    font-weight: 700;
+    color: $color-text;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  &__save {
+    padding: 0 12px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: $radius-pill;
+    background: linear-gradient(90deg, #ff8a45 0%, #ff6f27 100%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__hint {
+    color: $color-subtle;
+    font-size: 11px;
+  }
 }
 
 .profile-error {
