@@ -49,8 +49,11 @@ export default function IndexPage() {
   const profile = useUserStore((state) => state.profile)
   const history = useUserStore((state) => state.history)
   const inProgress = useUserStore((state) => state.inProgress)
+  const knowledge = useUserStore((state) => state.knowledge)
+  const knowledgeEnabled = useUserStore((state) => state.knowledgeEnabled)
   const ensureSession = useUserStore((state) => state.ensureSession)
   const startQuiz = useStudyStore((state) => state.startQuiz)
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([])
 
   const runTask = useCallback(
     async (taskId: string) => {
@@ -118,7 +121,8 @@ export default function IndexPage() {
       const created = await createQuizTask({
         user_input: value,
         question_count: 5,
-        difficulty: 'mixed'
+        difficulty: 'mixed',
+        knowledge_doc_ids: selectedDocIds.length > 0 ? selectedDocIds : undefined
       })
       rememberQuizTask({ task_id: created.task_id, input: value })
       setTask(created)
@@ -150,6 +154,16 @@ export default function IndexPage() {
 
   const handleOpenReport = (item: QuizHistoryItem) => {
     Taro.navigateTo({ url: `/pages/report/index?quiz_id=${item.quiz_id}` })
+  }
+
+  const handleOpenKnowledge = () => {
+    Taro.navigateTo({ url: '/pages/knowledge/index' })
+  }
+
+  const toggleDoc = (docId: string) => {
+    setSelectedDocIds((current) =>
+      current.includes(docId) ? current.filter((item) => item !== docId) : [...current, docId]
+    )
   }
 
   const percentOf = (item: InProgressQuizItem): number => {
@@ -226,6 +240,44 @@ export default function IndexPage() {
           {errorMessage ? (
             <View className='home-error'>
               <Text>{errorMessage}</Text>
+            </View>
+          ) : null}
+
+          {knowledgeEnabled ? (
+            <View className='kb-picker'>
+              <View className='kb-picker__head' onClick={handleOpenKnowledge}>
+                <View className='kb-picker__label'>
+                  <Icon name='book' size={14} color='#df5f1f' />
+                  <Text className='kb-picker__title'>我的知识库</Text>
+                </View>
+                <Text className='kb-picker__meta'>
+                  {knowledge.length > 0 ? `${knowledge.length} 份资料` : '上传私有资料'}
+                </Text>
+                <Text className='kb-picker__arrow'>›</Text>
+              </View>
+
+              {knowledge.length > 0 ? (
+                <View className='kb-picker__chips'>
+                  <View
+                    className={selectedDocIds.length === 0 ? 'kb-chip kb-chip--active' : 'kb-chip'}
+                    onClick={() => setSelectedDocIds([])}
+                  >
+                    <Text>全部资料</Text>
+                  </View>
+                  {knowledge.map((doc) => {
+                    const active = selectedDocIds.includes(doc.doc_id)
+                    return (
+                      <View
+                        key={doc.doc_id}
+                        className={active ? 'kb-chip kb-chip--active' : 'kb-chip'}
+                        onClick={() => toggleDoc(doc.doc_id)}
+                      >
+                        <Text className='kb-chip__text'>{doc.title}</Text>
+                      </View>
+                    )
+                  })}
+                </View>
+              ) : null}
             </View>
           ) : null}
         </View>

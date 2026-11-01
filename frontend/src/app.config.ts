@@ -4,7 +4,8 @@ export default defineAppConfig({
     'pages/quiz/index',
     'pages/report/index',
     'pages/bank/index',
-    'pages/profile/index'
+    'pages/profile/index',
+    'pages/knowledge/index'
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -85,6 +85,12 @@ class DatabaseUnavailable(AppError):
     default_message = "数据库暂不可用，请稍后重试"
 
 
+class KnowledgeUnavailable(AppError):
+    code = 5031
+    http_status = 503
+    default_message = "知识库暂不可用，请稍后重试"
+
+
 class QuizFormatError(Exception):
     """模型输出不满足题库契约，仅用于服务层内部重试判断。"""
 

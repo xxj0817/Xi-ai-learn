@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from app.core.config import Settings
 from app.core.exceptions import AIProviderError, AppError, InvalidInput, QuizFormatError
@@ -39,11 +39,32 @@ class QuizService:
         provider: LearningAIProvider,
         quiz_repository: QuizRepositoryProtocol | None = None,
         research_service: "ResearchService | None" = None,
+        knowledge_service: Any | None = None,
     ) -> None:
         self._settings = settings
         self._provider = provider
         self._quiz_repository = quiz_repository
         self._research_service = research_service
+        self._knowledge_service = knowledge_service
+
+    async def _resolve_knowledge_doc_ids(
+        self, request: QuizGenerateRequest, user_id: int | None
+    ) -> list[str]:
+        """把请求里的知识库范围解析为真实的文档编号。"""
+        requested = list(request.knowledge_doc_ids)
+        if not requested:
+            return []
+        if user_id is None:
+            raise InvalidInput("使用知识库出题需要先登录")
+        if self._knowledge_service is None:
+            raise InvalidInput("知识库暂不可用，请稍后重试")
+        try:
+            return await self._knowledge_service.resolve_doc_ids(user_id, requested)
+        except InvalidInput:
+            raise
+        except Exception as exc:  # noqa: BLE001 - 知识库异常降级为不使用知识库
+            logger.warning("知识库范围解析失败 error=%s", type(exc).__name__)
+            return []
 
     def validate(self, request: QuizGenerateRequest) -> str:
         """同步校验请求，异步任务在创建阶段即可返回明确的 400。"""
@@ -69,6 +90,7 @@ class QuizService:
         research: ResearchResult | None = None
         if self._research_service is not None:
             await self._emit(on_progress, QuizTaskStage.researching)
+            knowledge_doc_ids = await self._resolve_knowledge_doc_ids(request, user_id)
             try:
                 research = await self._research_service.gather(
                     user_input=user_input,
@@ -77,6 +99,8 @@ class QuizService:
                     region=request.region,
                     locale=request.locale,
                     accept_language=accept_language,
+                    user_id=user_id,
+                    knowledge_doc_ids=knowledge_doc_ids,
                 )
             except Exception as exc:  # noqa: BLE001 - 研究失败不阻断出题
                 logger.warning("研究服务失败 error=%s", type(exc).__name__)
@@ -215,6 +239,13 @@ class QuizService:
     def _source_type(self, sources: list[QuizSource]) -> str:
         has_user = any(source.origin == SourceOrigin.user for source in sources)
         has_web = any(source.origin == SourceOrigin.web for source in sources)
+        has_knowledge = any(
+            source.origin == SourceOrigin.knowledge for source in sources
+        )
+        if has_knowledge and (has_user or has_web):
+            return "mixed"
+        if has_knowledge:
+            return "kb"
         if has_user and has_web:
             return "mixed"
         if has_user:

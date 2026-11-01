@@ -116,6 +116,45 @@ class SourceCollector:
             if candidate is not None:
                 candidate.origin = SourceOrigin.user
 
+    def record_knowledge(self, chunks: Sequence[Any]) -> dict[str, Any]:
+        """登记知识库检索结果，返回给 Agent 的精简版本。
+
+        chunk 只需要具备 doc_id / title / chunk_index / content / score 属性。
+        """
+        compact: list[dict[str, Any]] = []
+        for chunk in chunks:
+            content = _clean(getattr(chunk, "content", ""))
+            if not content:
+                continue
+            doc_id = str(getattr(chunk, "doc_id", "") or "")
+            chunk_index = int(getattr(chunk, "chunk_index", 0) or 0)
+            title = _clean(str(getattr(chunk, "title", "") or "")) or "知识库片段"
+            try:
+                score = float(getattr(chunk, "score", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                score = 0.0
+            self._store(
+                f"kb:{doc_id}#{chunk_index}",
+                _Candidate(
+                    url="",
+                    title=title,
+                    content=content,
+                    origin=SourceOrigin.knowledge,
+                    published_date=None,
+                    score=score,
+                    order=self._next_order,
+                ),
+            )
+            compact.append(
+                {
+                    "title": title,
+                    "doc_id": doc_id,
+                    "content": content,
+                    "score": score,
+                }
+            )
+        return {"results": compact}
+
     def record(self, tool_name: str, result: Any) -> Any:
         """记录工具结果并返回给 Agent 的精简版本。"""
         data = result
@@ -199,6 +238,10 @@ class SourceCollector:
             (item for item in candidates if item.origin == SourceOrigin.user),
             key=lambda item: item.order,
         )
+        knowledge_sources = sorted(
+            (item for item in candidates if item.origin == SourceOrigin.knowledge),
+            key=lambda item: (-item.score, item.order),
+        )
         web_sources = [item for item in candidates if item.origin == SourceOrigin.web]
 
         if used_urls:
@@ -208,7 +251,7 @@ class SourceCollector:
                 web_sources = matched
 
         web_sources.sort(key=lambda item: (-item.score, item.order))
-        selected = (user_sources + web_sources)[:max_sources]
+        selected = (user_sources + knowledge_sources + web_sources)[:max_sources]
 
         sources: list[QuizSource] = []
         total = 0
@@ -240,6 +283,12 @@ class SourceCollector:
     @property
     def has_web_sources(self) -> bool:
         return any(item.origin == SourceOrigin.web for item in self._candidates.values())
+
+    @property
+    def has_knowledge_sources(self) -> bool:
+        return any(
+            item.origin == SourceOrigin.knowledge for item in self._candidates.values()
+        )
 
     def _store(self, key: str, candidate: _Candidate) -> None:
         candidate.order = self._next_order

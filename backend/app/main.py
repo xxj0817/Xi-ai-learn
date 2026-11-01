@@ -28,6 +28,7 @@ from app.repositories.quiz_task_repository import (
     QuizTaskRepository,
 )
 from app.repositories.user_repository import UserRepository
+from app.services.knowledge_service import build_knowledge_service
 from app.services.quiz_service import QuizService
 from app.services.quiz_task_service import QuizTaskService
 from app.services.quiz_task_worker import QuizTaskWorker
@@ -59,6 +60,7 @@ def create_app(
     research_service: object | None = None,
     quiz_task_repo: object | None = None,
     quiz_task_worker: object | None = None,
+    knowledge_service: object | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
@@ -94,10 +96,18 @@ def create_app(
                     app.state.provider,
                     app.state.quiz_repo,
                     app.state.research_service,
+                    getattr(app.state, "knowledge_service", None),
                 ),
             )
         # 上次进程遗留的 pending/running 任务不会再执行，启动时统一下线
         await app.state.quiz_task_worker.recover()
+
+        if app.state.knowledge_service is None:
+            app.state.knowledge_service = build_knowledge_service(settings, app.state.db)
+        # 研究服务在 create_app 阶段已构造，这里补上运行期才就绪的知识库依赖
+        setter = getattr(app.state.research_service, "set_knowledge_service", None)
+        if callable(setter):
+            setter(app.state.knowledge_service)
 
         try:
             yield
@@ -126,6 +136,7 @@ def create_app(
     app.state.quiz_repo = quiz_repo
     app.state.quiz_task_repo = quiz_task_repo
     app.state.quiz_task_worker = quiz_task_worker
+    app.state.knowledge_service = knowledge_service
     app.state.static_root = _resolve_static_root(settings)
 
     app.add_middleware(

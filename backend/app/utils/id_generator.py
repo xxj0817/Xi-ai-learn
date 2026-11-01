@@ -11,3 +11,7 @@ def new_quiz_id() -> str:
 
 def new_quiz_task_id() -> str:
     return f"task_{uuid4().hex}"
+
+
+def new_knowledge_doc_id() -> str:
+    return f"doc_{uuid4().hex[:12]}"

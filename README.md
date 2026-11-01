@@ -114,6 +114,10 @@ npm run dev:h5      # H5 预览 http://localhost:10086
 | GET | `/api/v1/quiz/tasks/{task_id}` | 轮询任务状态，成功后返回完整题库 |
 | POST | `/api/v1/quiz/generate` | 同步生成 3~8 道闯关题（兼容脚本与旧客户端，交互流程请用任务接口） |
 | POST | `/api/v1/report/generate` | 生成复盘报告（服务端权威判分） |
+| POST | `/api/v1/knowledge/documents` | 上传私有文档（multipart，PDF/Word/Markdown/TXT） |
+| POST | `/api/v1/knowledge/documents/text` | 把粘贴的文本存为知识库文档 |
+| GET | `/api/v1/knowledge/documents` | 列出当前用户的知识库文档 |
+| DELETE | `/api/v1/knowledge/documents/{doc_id}` | 删除文档（同时清理向量与文件） |
 
 错误码：
 
@@ -122,9 +126,10 @@ npm run dev:h5      # H5 预览 http://localhost:10086
 | 4001 | 400 | 参数或答题记录不合法 |
 | 4002 | 502 | AI 生成失败（含重试后仍失败） |
 | 4003 | 422 | 内容命中敏感词或提示词注入 |
-| 4041 | 404 | 生成任务不存在、已过期或不属于当前用户 |
+| 4041 | 404 | 生成任务/知识库文档不存在或不属于当前用户 |
 | 4290 | 429 | 触发限流 |
 | 4040 | 404 | 接口不存在 |
+| 5031 | 503 | 知识库未启用或未配置嵌入服务 |
 | 5040 | - | 出题任务整体超时，见轮询响应的 `error.code` |
 
 ## 异步出题任务（创建 + 轮询）
@@ -216,8 +221,43 @@ TAVILY_PROXY_URL=
 
 接口新增字段（均为可选，旧客户端不受影响）：
 
-- 请求：`source_text`、`source_urls`、`region`、`locale`
-- 响应：`sources`、`grounding`、题目级 `citations`
+- 请求：`source_text`、`source_urls`、`region`、`locale`、`knowledge_doc_ids`
+- 响应：`sources`、`grounding`、题目级 `citations`；`source_type` 新增 `kb`（仅知识库）与 `mixed`（多渠道混合）
+
+## 私有知识库（RAG）
+
+企业培训资料、客服知识库、内部文档这类内容大模型既不知道也搜不到。用户可以先上传资料建立自己的知识库，出题时优先基于这些私有内容：
+
+```text
+上传文档 / 粘贴文本
+  ↓ 解析（pypdf / docx2txt / 文本）
+  ↓ 切分（RecursiveCharacterTextSplitter，chunk 800 / overlap 120）
+  ↓ 向量化（百炼 text-embedding-v4，1024 维，单批 10 条）
+  ↓ 存入 Chroma（每个用户一个 collection：kb_user_{user_id}）
+出题时 → Agent 自主选择 knowledge_search 或 Tavily 联网工具
+```
+
+- **多源检索**：`knowledge_search` 与 Tavily 工具一起交给研究 Agent，由它判断该查私有资料还是联网；Agent 漏调或不可用时，系统会补一次确定性的知识库检索，保证私有资料一定被用上
+- **来源统一编号**：知识库片段与网页结果共用 `S1..Sn` 编号，题目仍可逐题引证
+- **格式与限制**：PDF / Word / Markdown / TXT，单文件 ≤ 10MB，每人 ≤ 20 份文档，粘贴文本 ≤ 50000 字
+- **隔离与隐私**：文档按 `user_id` 二次校验，原始文件存 `backend/data/uploads/{user_id}/`，不在 `/static` 下，不可公网访问；向量库目录 `backend/data/chroma/`
+- **降级**：未配置 `DASHSCOPE_API_KEY` 时 `/knowledge/*` 返回 `5031`，出题链路自动退回原有逻辑，不影响任何既有功能
+
+启用方式（`backend/.env`）：
+
+```dotenv
+KB_ENABLED=true
+DASHSCOPE_API_KEY=sk-xxxx
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+EMBEDDING_MODEL=text-embedding-v4
+EMBEDDING_DIMENSIONS=1024
+# 百炼单次最多 10 条，不要调大
+EMBEDDING_BATCH_SIZE=10
+```
+
+**数据流向**：文档正文会发送给百炼做向量化（按量计费，有免费额度）；向量与原文只存储在你自己的服务器上，不进入第三方知识库。
+
+出题时传 `knowledge_doc_ids` 指定范围，留空表示使用该用户全部已就绪文档；前端首页可勾选具体文档。
 
 ## 测试
 
@@ -226,7 +266,7 @@ cd backend
 .venv\Scripts\python.exe -m pytest -q
 ```
 
-- 313 项单元/接口/集成测试覆盖：出题校验、重试与兜底、内容过滤、服务端判分、报告聚合、限流、Prompt 契约、模板花括号、DeepSeek 结构化输出降级与代理策略、Tavily 工具套件、研究 Agent、引证校验与来源持久化、异步任务状态机与轮询
+- 384 项单元/接口/集成测试覆盖：出题校验、重试与兜底、内容过滤、服务端判分、报告聚合、限流、Prompt 契约、模板花括号、DeepSeek 结构化输出降级与代理策略、Tavily 工具套件、研究 Agent、引证校验与来源持久化、异步任务状态机与轮询、知识库解析/切分/嵌入批处理/Chroma 隔离/上传删除/多源检索
 - 覆盖率 96%（`pytest --cov=app`）
 - 集成测试 `tests/test_deepseek_integration.py` 需要设置 `DEEPSEEK_API_KEY` 才会执行，否则自动跳过
 

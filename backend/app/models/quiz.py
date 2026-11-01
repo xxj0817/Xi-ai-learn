@@ -24,6 +24,7 @@ class Difficulty(str, Enum):
 class SourceOrigin(str, Enum):
     user = "user"
     web = "web"
+    knowledge = "knowledge"
 
 
 class GroundingStatus(str, Enum):
@@ -84,6 +85,24 @@ class QuizGenerateRequest(BaseModel):
     source_urls: list[str] = Field(default_factory=list)
     region: str | None = Field(default=None, max_length=32)
     locale: str | None = Field(default=None, max_length=32)
+    # 知识库文档范围；为空表示使用该用户全部知识库文档
+    knowledge_doc_ids: list[str] = Field(default_factory=list)
+
+    @field_validator("knowledge_doc_ids")
+    @classmethod
+    def validate_knowledge_doc_ids(cls, value: list[str]) -> list[str]:
+        cleaned: list[str] = []
+        for raw in value:
+            doc_id = str(raw).strip()
+            if not doc_id:
+                raise ValueError("knowledge_doc_ids 不能包含空值")
+            if len(doc_id) > 64:
+                raise ValueError("knowledge_doc_ids 中的编号不能超过 64 个字符")
+            if doc_id not in cleaned:
+                cleaned.append(doc_id)
+        if len(cleaned) > 20:
+            raise ValueError("knowledge_doc_ids 最多支持 20 个文档")
+        return cleaned
 
     @field_validator("source_urls")
     @classmethod

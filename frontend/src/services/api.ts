@@ -1,5 +1,11 @@
 import { request } from '@/services/request'
 import type { AnswerRecordPayload, GenerateQuizPayload, GenerateReportPayload } from '@/types/api'
+import type {
+  KnowledgeDeleteResult,
+  KnowledgeDocument,
+  KnowledgeDocumentList,
+  KnowledgeTextPayload
+} from '@/types/knowledge'
 import type { Quiz, QuizTask, Report } from '@/types/quiz'
 import type {
   InProgressQuizList,
@@ -77,5 +83,26 @@ export function uploadAvatar(
     url: '/user/avatar',
     method: 'POST',
     data: { data, content_type: contentType }
+  })
+}
+
+export function fetchKnowledgeDocuments(): Promise<KnowledgeDocumentList> {
+  return request<KnowledgeDocumentList>({ url: '/knowledge/documents' })
+}
+
+export function createKnowledgeText(
+  payload: KnowledgeTextPayload
+): Promise<KnowledgeDocument> {
+  return request<KnowledgeDocument>({
+    url: '/knowledge/documents/text',
+    method: 'POST',
+    data: payload
+  })
+}
+
+export function deleteKnowledgeDocument(docId: string): Promise<KnowledgeDeleteResult> {
+  return request<KnowledgeDeleteResult>({
+    url: `/knowledge/documents/${docId}`,
+    method: 'DELETE'
   })
 }

@@ -51,17 +51,22 @@ class ResearchService:
         cache: TTLCache[ResearchResult] | None = None,
         toolset_builder: Callable[..., Any] | None = None,
         now: Callable[[], datetime] | None = None,
+        knowledge_service: Any | None = None,
     ) -> None:
         self._settings = settings
         self._agent = agent
         self._cache = cache or TTLCache(settings.web_search_cache_ttl_seconds)
         self._toolset_builder = toolset_builder
         self._now = now or (lambda: datetime.now(timezone.utc))
+        self._knowledge_service = knowledge_service
         self._search_configured = (
             settings.web_search_enabled
             and settings.web_search_provider == "tavily"
             and bool(settings.tavily_api_key.strip())
         )
+
+    def set_knowledge_service(self, service: Any | None) -> None:
+        self._knowledge_service = service
 
     async def gather(
         self,
@@ -72,6 +77,8 @@ class ResearchService:
         region: str | None = None,
         locale: str | None = None,
         accept_language: str | None = None,
+        user_id: int | None = None,
+        knowledge_doc_ids: Sequence[str] = (),
     ) -> ResearchResult:
         user_input = (user_input or "").strip()
         source_text = source_text or ""
@@ -87,7 +94,10 @@ class ResearchService:
             user_input=user_input,
         )
         topic_hint = strip_urls(user_input)
-        cache_key = self._cache_key(user_input, source_text, urls, region_context)
+        doc_ids = [str(item) for item in knowledge_doc_ids if item]
+        cache_key = self._cache_key(
+            user_input, source_text, urls, region_context, doc_ids
+        )
 
         cached = self._cache.get(cache_key)
         if cached is not None:
@@ -123,6 +133,10 @@ class ResearchService:
             except Exception as exc:  # noqa: BLE001 - 检索不可用时降级
                 logger.warning("Tavily 工具套件不可用 error=%s", type(exc).__name__)
 
+        knowledge_tool = self._build_knowledge_tool(
+            collector=collector, user_id=user_id, doc_ids=doc_ids
+        )
+
         if suite is not None and urls:
             extracted_urls = await self._pre_extract(suite, urls)
             collector.mark_user_urls([*urls, *extracted_urls])
@@ -144,13 +158,17 @@ class ResearchService:
                 ),
             )
 
+        tools: list[Any] = list(getattr(suite, "tools", []) or [])
+        if knowledge_tool is not None:
+            tools.append(knowledge_tool)
+
         brief: ResearchBrief | None = None
         agent_attempted = False
-        if suite is not None and self._agent is not None:
+        if tools and self._agent is not None:
             agent_attempted = True
             try:
                 brief = await self._agent.run(
-                    tools=suite.tools,
+                    tools=tools,
                     user_input=user_input,
                     urls=urls,
                     source_text=source_text[:2000],
@@ -162,16 +180,32 @@ class ResearchService:
         topic = self._resolve_topic(brief, topic_hint, user_sources)
         used_urls = brief.used_urls if brief is not None else []
         sources = self._finalize(collector, used_urls=used_urls)
-        if self._has_web_sources(sources):
+        if self._has_grounded_sources(sources):
             return self._cache_and_return(
                 cache_key,
                 self._build_result(
                     topic=topic,
                     sources=sources,
                     mode="agent" if brief is not None else "fallback",
-                    searched_at=self._now_iso(),
+                    searched_at=self._now_iso() if self._has_web_sources(sources) else None,
                 ),
             )
+
+        # 未命中任何可核实来源时补一次确定性的知识库检索，
+        # 保证没有可用 Agent（如离线 Mock）或 Agent 漏调工具时私有资料仍被使用
+        if knowledge_tool is not None:
+            await self._fallback_knowledge_search(knowledge_tool, topic_hint or user_input or topic)
+            sources = self._finalize(collector)
+            if self._has_grounded_sources(sources):
+                return self._cache_and_return(
+                    cache_key,
+                    self._build_result(
+                        topic=topic,
+                        sources=sources,
+                        mode="fallback",
+                        searched_at=self._now_iso() if self._has_web_sources(sources) else None,
+                    ),
+                )
 
         if suite is not None and agent_attempted:
             await self._fallback_search(suite, topic_hint or user_input or topic)
@@ -191,7 +225,11 @@ class ResearchService:
         result = self._build_result(
             topic=topic,
             sources=sources,
-            mode="user_only" if sources else "none",
+            mode=(
+                "knowledge"
+                if self._has_grounded_sources(sources)
+                else ("user_only" if sources else "none")
+            ),
             searched_at=None,
         )
         if sources:
@@ -204,9 +242,14 @@ class ResearchService:
         source_text: str,
         urls: list[str],
         region: RegionContext,
+        doc_ids: Sequence[str] = (),
     ) -> str:
         material = json.dumps(
-            {"text": source_text, "urls": sorted(urls)},
+            {
+                "text": source_text,
+                "urls": sorted(urls),
+                "docs": sorted(doc_ids),
+            },
             ensure_ascii=False,
             sort_keys=True,
         )
@@ -223,6 +266,41 @@ class ResearchService:
             extract_result_max_chars=self._settings.tavily_extract_result_max_chars,
             tool_total_max_chars=self._settings.tavily_tool_total_max_chars,
         )
+
+    def _build_knowledge_tool(
+        self,
+        *,
+        collector: SourceCollector,
+        user_id: int | None,
+        doc_ids: Sequence[str],
+    ) -> Any | None:
+        if self._knowledge_service is None or user_id is None or not doc_ids:
+            return None
+        try:
+            from app.knowledge.retriever_tool import build_knowledge_tool
+
+            return build_knowledge_tool(
+                self._knowledge_service,
+                user_id=user_id,
+                collector=collector,
+                doc_ids=doc_ids,
+                top_k=self._settings.kb_top_k,
+                max_chars=self._settings.kb_context_max_chars,
+            )
+        except Exception as exc:  # noqa: BLE001 - 知识库工具不可用时退回纯检索
+            logger.warning("知识库工具初始化失败 error=%s", type(exc).__name__)
+            return None
+
+    async def _fallback_knowledge_search(self, tool: Any, query: str) -> None:
+        keyword = (query or "").strip()[:300]
+        if not keyword:
+            return
+        try:
+            result = await tool.ainvoke({"query": keyword})
+            if isinstance(result, dict) and result.get("error"):
+                logger.warning("知识库兜底检索失败 error=%s", result.get("error"))
+        except Exception as exc:  # noqa: BLE001 - 兜底失败保持静默
+            logger.warning("知识库兜底检索失败 error=%s", type(exc).__name__)
 
     def _build_suite(self, collector: SourceCollector, region: RegionContext) -> Any:
         builder = self._toolset_builder
@@ -315,7 +393,12 @@ class ResearchService:
     ) -> ResearchResult:
         has_user = any(source.origin == SourceOrigin.user for source in sources)
         has_web = any(source.origin == SourceOrigin.web for source in sources)
-        if has_user and has_web:
+        has_knowledge = any(source.origin == SourceOrigin.knowledge for source in sources)
+        if has_knowledge and (has_user or has_web):
+            provider = "mixed"
+        elif has_knowledge:
+            provider = "knowledge"
+        elif has_user and has_web:
             provider = "mixed"
         elif has_user:
             provider = "user"
@@ -334,6 +417,12 @@ class ResearchService:
 
     def _has_web_sources(self, sources: Sequence[QuizSource]) -> bool:
         return any(source.origin == SourceOrigin.web for source in sources)
+
+    def _has_grounded_sources(self, sources: Sequence[QuizSource]) -> bool:
+        return any(
+            source.origin in (SourceOrigin.web, SourceOrigin.knowledge)
+            for source in sources
+        )
 
     def _now_iso(self) -> str:
         return self._now().astimezone(timezone.utc).isoformat()

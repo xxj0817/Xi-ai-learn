@@ -102,6 +102,32 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = Field(default=20, ge=1, le=1000)
 
+    # ===== 知识库（RAG） =====
+    kb_enabled: bool = True
+    # 百炼（DashScope）OpenAI 兼容接口，用于 text-embedding-v4
+    dashscope_api_key: str = ""
+    dashscope_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    dashscope_trust_env_proxy: bool = False
+    dashscope_proxy_url: str = ""
+    embedding_model: str = "text-embedding-v4"
+    embedding_dimensions: int = Field(default=1024, ge=64, le=2048)
+    # 百炼 OpenAI 兼容接口单次最多 10 条输入
+    embedding_batch_size: int = Field(default=10, ge=1, le=10)
+    embedding_timeout_seconds: float = Field(default=30.0, gt=0, le=180)
+    # 留空表示使用 backend/data/chroma
+    chroma_persist_dir: str = ""
+    # 留空表示使用 backend/data/uploads
+    kb_upload_dir: str = ""
+    kb_max_file_bytes: int = Field(default=10_000_000, ge=1024, le=50_000_000)
+    kb_max_documents_per_user: int = Field(default=20, ge=1, le=200)
+    kb_max_text_chars: int = Field(default=50_000, ge=100, le=500_000)
+    kb_chunk_size: int = Field(default=800, ge=100, le=4000)
+    kb_chunk_overlap: int = Field(default=120, ge=0, le=1000)
+    kb_top_k: int = Field(default=5, ge=1, le=20)
+    kb_context_max_chars: int = Field(default=4000, ge=200, le=20000)
+    kb_max_documents_per_quiz: int = Field(default=5, ge=1, le=20)
+    kb_upload_timeout_seconds: float = Field(default=120.0, gt=0, le=600)
+
     # ===== MySQL =====
     mysql_enabled: bool = True
     mysql_host: str = "127.0.0.1"
@@ -155,6 +181,8 @@ class Settings(BaseSettings):
             raise ValueError("source_snippet_max_chars 不能大于 source_total_max_chars")
         if self.user_source_snippet_max_chars > self.source_total_max_chars:
             raise ValueError("user_source_snippet_max_chars 不能大于 source_total_max_chars")
+        if self.kb_chunk_overlap >= self.kb_chunk_size:
+            raise ValueError("kb_chunk_overlap 必须小于 kb_chunk_size")
         return self
 
 

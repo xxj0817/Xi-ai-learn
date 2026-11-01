@@ -8,6 +8,7 @@ export interface GenerateQuizPayload {
   user_input: string
   question_count?: number
   difficulty?: 'mixed' | 'easy' | 'medium' | 'hard'
+  knowledge_doc_ids?: string[]
 }
 
 export interface AnswerRecordPayload {

@@ -28,12 +28,23 @@ export class ApiError extends Error {
 
 interface RequestOptions {
   url: string
-  method?: 'GET' | 'POST' | 'PUT'
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   data?: unknown
   auth?: boolean
 }
 
 let loginTask: Promise<LoginResponse> | null = null
+
+/** 拼接完整接口地址，供 Taro.uploadFile 等非 request 封装使用。 */
+export function apiUrl(path: string): string {
+  return `${BASE_URL}${API_PREFIX}${path}`
+}
+
+/** 当前登录态请求头；未登录时返回空对象。 */
+export function currentAuthHeader(): Record<string, string> {
+  const token = getToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
 
 async function send<T>(options: RequestOptions, token: string): Promise<ApiEnvelope<T>> {
   const header: Record<string, string> = { 'Content-Type': 'application/json' }

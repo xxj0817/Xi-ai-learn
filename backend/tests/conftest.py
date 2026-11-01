@@ -418,6 +418,7 @@ TRUNCATE_ORDER = (
     "quiz_progress",
     "quiz_grounding",
     "quiz_tasks",
+    "knowledge_documents",
     "quiz_sessions",
     "users",
 )

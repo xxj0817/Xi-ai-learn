@@ -23,6 +23,7 @@ async def generate_quiz(payload: QuizGenerateRequest, request: Request) -> ApiRe
         request.app.state.provider,
         getattr(request.app.state, "quiz_repo", None),
         getattr(request.app.state, "research_service", None),
+        getattr(request.app.state, "knowledge_service", None),
     )
     quiz = await service.generate(
         payload,

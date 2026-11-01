@@ -1,8 +1,16 @@
 import { create } from 'zustand'
 
-import { fetchHistory, fetchInProgress, fetchProfile, updateNickname, uploadAvatar } from '@/services/api'
+import {
+  fetchHistory,
+  fetchInProgress,
+  fetchKnowledgeDocuments,
+  fetchProfile,
+  updateNickname,
+  uploadAvatar
+} from '@/services/api'
 import { getCachedUser, isLoggedIn, setCachedUser } from '@/services/auth'
 import { loginWithWeChat } from '@/services/request'
+import type { KnowledgeDocument } from '@/types/knowledge'
 import type { InProgressQuizItem, QuizHistoryItem, UserProfile } from '@/types/user'
 
 const PAGE_SIZE = 20
@@ -14,6 +22,8 @@ interface UserState {
   historyTotal: number
   historyPage: number
   inProgress: InProgressQuizItem[]
+  knowledge: KnowledgeDocument[]
+  knowledgeEnabled: boolean
   loading: boolean
   historyLoading: boolean
   error: string
@@ -22,6 +32,7 @@ interface UserState {
   loadProfile: () => Promise<void>
   loadHistory: (page?: number, append?: boolean) => Promise<void>
   loadInProgress: () => Promise<void>
+  loadKnowledge: () => Promise<void>
   rename: (nickname: string) => Promise<boolean>
   changeAvatar: (base64: string, contentType: string) => Promise<boolean>
   reset: () => void
@@ -57,6 +68,8 @@ export const useUserStore = create<UserState>()((set, get) => ({
   historyTotal: 0,
   historyPage: 1,
   inProgress: [],
+  knowledge: [],
+  knowledgeEnabled: true,
   loading: false,
   historyLoading: false,
   error: '',
@@ -96,7 +109,12 @@ export const useUserStore = create<UserState>()((set, get) => ({
         return
       }
     }
-    await Promise.all([get().loadProfile(), get().loadHistory(1), get().loadInProgress()])
+    await Promise.all([
+      get().loadProfile(),
+      get().loadHistory(1),
+      get().loadInProgress(),
+      get().loadKnowledge()
+    ])
   },
 
   loadProfile: async () => {
@@ -146,6 +164,21 @@ export const useUserStore = create<UserState>()((set, get) => ({
     }
   },
 
+  loadKnowledge: async () => {
+    if (!get().loggedIn) {
+      return
+    }
+    try {
+      const result = await fetchKnowledgeDocuments()
+      set({ knowledge: result.items, knowledgeEnabled: result.enabled })
+    } catch (error) {
+      // 知识库未启用（503）或网络异常时不阻塞首页，静默降级
+      const code = (error as { code?: number }).code
+      console.warn('加载知识库失败', code, error)
+      set({ knowledge: [], knowledgeEnabled: code !== 5031 })
+    }
+  },
+
   rename: async (nickname) => {
     const trimmed = nickname.trim()
     if (!trimmed) {
@@ -186,6 +219,8 @@ export const useUserStore = create<UserState>()((set, get) => ({
       historyTotal: 0,
       historyPage: 1,
       inProgress: [],
+      knowledge: [],
+      knowledgeEnabled: true,
       error: ''
     })
 }))
